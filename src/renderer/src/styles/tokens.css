@@ -1,0 +1,68 @@
+/* Design tokens. Themes only change colors, so components never name a color directly. */
+
+:root {
+  --font-ui: 'Inter Variable', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono Variable', ui-monospace, monospace;
+  --font-size: 14px;
+  --code-size: 13px;
+  --code-ligatures: contextual;
+
+  /* Type scale, relative to the text size setting. */
+  --text-xs: 0.786rem;
+  --text-sm: 0.893rem;
+  --text-md: 1rem;
+  --text-lg: 1.143rem;
+  --text-xl: 1.5rem;
+  --text-2xl: 2rem;
+
+  /* Spacing grid of 4px. */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+  --radius-full: 999px;
+
+  --control-height: 32px;
+  --row-height: 32px;
+  --sidebar-width: 268px;
+  --sidebar-rail: 56px;
+  --column-width: 780px;
+  --page-width: 860px;
+
+  --transition: 120ms ease;
+
+  /* Stacking inside the main area. The video sits on the backdrop layer. */
+  --z-backdrop: 0;
+  --z-content: 1;
+  --z-overlay: 50;
+  --z-toast: 60;
+}
+
+/* Colors are set on the root by lib/themes.ts. These keep the first paint black. */
+:root {
+  color-scheme: dark;
+  --bg: #000000;
+  --bg-solid: #000000;
+  --surface: #0b0b0b;
+  --surface-solid: #0b0b0b;
+  --text: #ededed;
+}
+
+[data-motion='reduce'] {
+  --transition: 0ms;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --transition: 0ms;
+  }
+}

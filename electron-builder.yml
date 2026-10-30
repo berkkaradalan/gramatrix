@@ -1,0 +1,15 @@
+appId: dev.gramatrix.app
+productName: Gramatrix
+directories:
+  output: dist
+  buildResources: build
+files:
+  - out/**
+  - package.json
+mac:
+  target: [dmg, zip]
+  category: public.app-category.developer-tools
+linux:
+  target: [AppImage, deb]
+  category: Development
+  maintainer: Gramatrix Contributors <berkkaradalan@users.noreply.github.com>

@@ -2,28 +2,33 @@
 import '@fontsource-variable/inter'
 import '@fontsource-variable/jetbrains-mono'
 import '../styles/site.css'
+import Icon from '../components/Icon.astro'
 import { DESCRIPTION, PROVIDERS, RELEASES_URL, REPOSITORY_URL, TAGLINE } from '../data/site'
 
-const rows = [
+const features = [
   {
+    tab: 'Approvals',
     title: 'Review every change before it happens',
     text: 'Edits show a diff and commands wait for your answer. Each chat has its own mode: read only, ask first, accept edits or full access. Subagents follow the same rules.',
     image: 'chat',
     alt: 'A chat where the agent asks for approval before editing a file'
   },
   {
+    tab: 'Models',
     title: 'Use any model you already pay for',
     text: 'Model lists come live from each provider, with context size and price. Connect a pay per token key or a coding plan from Z.ai, MiniMax, Kimi or Alibaba.',
     image: 'models',
     alt: 'The model picker with search, favorites and prices'
   },
   {
+    tab: 'Schedules',
     title: 'Run prompts on a schedule',
     text: 'Set a daily review or a weekly report. Every run keeps its transcript, and you choose what happens to runs missed while the app was closed.',
     image: 'scheduled',
     alt: 'The list of scheduled jobs'
   },
   {
+    tab: 'Channels',
     title: 'Reach it from Telegram or Slack',
     text: 'Pair your account with a one time code. Only paired people can talk to your agent, and channel runs start read only.',
     image: 'channels',
@@ -31,11 +36,21 @@ const rows = [
   }
 ]
 
-const downloads = [
-  { key: 'mac-arm64', title: 'macOS', detail: 'Apple Silicon' },
-  { key: 'mac-x64', title: 'macOS', detail: 'Intel' },
-  { key: 'linux-deb', title: 'Linux', detail: 'Debian and Ubuntu (.deb)' },
-  { key: 'linux-appimage', title: 'Linux', detail: 'AppImage' }
+const platforms = [
+  {
+    name: 'macOS',
+    builds: [
+      { key: 'mac-arm64', label: 'Apple Silicon' },
+      { key: 'mac-x64', label: 'Intel' }
+    ]
+  },
+  {
+    name: 'Linux',
+    builds: [
+      { key: 'linux-deb', label: 'Debian and Ubuntu (.deb)' },
+      { key: 'linux-appimage', label: 'AppImage' }
+    ]
+  }
 ]
 
 const title = `Gramatrix - ${TAGLINE}`
@@ -80,7 +95,7 @@ const socialImage = new URL('/og.png', Astro.site).href
       <nav aria-label="Main">
         <a href="#features">Features</a>
         <a href="/docs/">Docs</a>
-        <a href={REPOSITORY_URL}>GitHub</a>
+        <a href={REPOSITORY_URL} aria-label="GitHub"><Icon name="github" size={18} /></a>
       </nav>
       <a class="button small" href="#download">Download</a>
     </header>
@@ -96,22 +111,57 @@ const socialImage = new URL('/og.png', Astro.site).href
           </p>
           <div class="cta">
             <a class="button primary" href="#download" data-primary-download>
+              <Icon name="download" />
               <span data-label>Download</span>
             </a>
-            <a class="button" href={REPOSITORY_URL}>GitHub</a>
+            <a class="button" href={REPOSITORY_URL}><Icon name="github" /> GitHub</a>
           </div>
           <p class="note">Free and open source. macOS and Linux.</p>
         </div>
       </section>
 
-      <section class="showcase">
-        <img
-          class="shot"
-          src="/screens/home.webp"
-          width="1280"
-          height="800"
-          alt="Gramatrix open on its home screen"
-        />
+      <section class="tour" id="features" aria-label="Features" data-tour>
+        <div class="tour-stage">
+          {
+            features.map(({ title, text, image, alt }, index) => (
+              <article
+                class="tour-panel"
+                role="tabpanel"
+                id={`tour-panel-${index}`}
+                aria-labelledby={`tour-tab-${index}`}
+                data-active={index === 0 ? 'true' : 'false'}
+              >
+                <img
+                  src={`/screens/${image}.webp`}
+                  width="1280"
+                  height="800"
+                  alt={alt}
+                  loading={index === 0 ? 'eager' : 'lazy'}
+                />
+                <div class="tour-copy">
+                  <h2>{title}</h2>
+                  <p>{text}</p>
+                </div>
+              </article>
+            ))
+          }
+        </div>
+        <div class="tour-tabs" role="tablist" aria-label="Features">
+          {
+            features.map(({ tab }, index) => (
+              <button
+                class="tour-tab"
+                type="button"
+                role="tab"
+                id={`tour-tab-${index}`}
+                aria-label={tab}
+                aria-controls={`tour-panel-${index}`}
+                aria-selected={index === 0 ? 'true' : 'false'}
+                tabindex={index === 0 ? 0 : -1}
+              />
+            ))
+          }
+        </div>
       </section>
 
       <section class="providers" aria-label="Supported providers">
@@ -127,39 +177,27 @@ const socialImage = new URL('/og.png', Astro.site).href
         </ul>
       </section>
 
-      <section class="section" id="features">
-        {
-          rows.map(({ title, text, image, alt }) => (
-            <article class="row">
-              <div>
-                <h2>{title}</h2>
-                <p>{text}</p>
-              </div>
-              <img
-                class="shot"
-                src={`/screens/${image}.webp`}
-                width="1280"
-                height="800"
-                alt={alt}
-                loading="lazy"
-              />
-            </article>
-          ))
-        }
-      </section>
-
       <section class="section download" id="download">
         <h2>Download</h2>
         <p class="status" data-release-status>Choose your system.</p>
         <div class="downloads">
           {
-            downloads.map(({ key, title, detail }) => (
-              <a class="download-card" href={RELEASES_URL} data-card={key}>
-                <span class="recommended">Your system</span>
-                <h3>{title}</h3>
-                <p>{detail}</p>
-                <small data-size />
-              </a>
+            platforms.map(({ name, builds }) => (
+              <div>
+                <h3>{name}</h3>
+                <ul>
+                  {builds.map(({ key, label }) => (
+                    <li>
+                      <a class="download-row" href={RELEASES_URL} data-card={key}>
+                        {label}
+                        <span class="recommended">Your system</span>
+                        <small data-size />
+                        <Icon name="download" />
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </div>
             ))
           }
         </div>
@@ -186,7 +224,10 @@ const socialImage = new URL('/og.png', Astro.site).href
     <script>
       import { startAsciiField, startAsciiWordmark } from '../scripts/ascii-field'
       import { connectDownloads } from '../scripts/downloads'
+      import { startFeatureTour } from '../scripts/feature-tour'
 
+      const tour = document.querySelector<HTMLElement>('[data-tour]')
+      if (tour) startFeatureTour(tour)
       const canvas = document.querySelector<HTMLCanvasElement>('[data-ascii]')
       if (canvas) startAsciiField(canvas)
       const wordmark = document.querySelector<HTMLCanvasElement>('[data-wordmark]')

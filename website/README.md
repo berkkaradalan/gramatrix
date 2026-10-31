@@ -15,8 +15,8 @@ Open <http://localhost:4321>. Node.js 22.12 or newer is required.
 | ----------------------- | ------------------------------------------------------- |
 | `src/pages/index.astro` | The landing page.                                       |
 | `src/pages/*.ts`        | `robots.txt` and `sitemap.xml`.                         |
-| `src/components/`       | Starlight overrides that keep the docs on one theme.    |
-| `src/scripts/`          | ASCII backgrounds and the download buttons.             |
+| `src/components/`       | Icons, and Starlight overrides for one docs theme.      |
+| `src/scripts/`          | ASCII backgrounds, feature tour and download buttons.   |
 | `src/data/site.ts`      | Links, copy and providers.                              |
 | `scripts/sync-docs.mjs` | Generates the docs pages. Runs before `dev` and `build` |
 

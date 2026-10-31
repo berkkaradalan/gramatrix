@@ -15,19 +15,40 @@
   --sl-color-bg-nav: #000;
   --sl-color-bg-sidebar: #070807;
   --sl-color-hairline: #1c211e;
-  --sl-color-hairline-shade: #141715;
+  --sl-color-hairline-shade: #1c211e;
   --sl-content-width: 48rem;
+  --sl-nav-height: 3.5rem;
 }
 
+/* The header sizes below match .nav in site.css, so moving between the landing page and the docs
+   does not shift anything. */
 .site-title {
-  gap: 0.55rem;
+  gap: 9px;
   color: var(--sl-color-white);
   font-family: var(--sl-font-mono);
-  font-size: 1rem;
+  font-size: 15px;
   font-weight: 600;
+  text-transform: lowercase;
 }
 
 .site-title img {
-  width: 1.35rem;
-  height: 1.35rem;
+  width: 22px;
+  height: 22px;
+}
+
+.social-icons::after {
+  display: none;
+}
+
+.social-icons a {
+  color: #929e96;
+}
+
+.social-icons a:hover {
+  color: var(--sl-color-white);
+}
+
+.social-icons svg {
+  width: 18px;
+  height: 18px;
 }

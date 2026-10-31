@@ -1,0 +1,33 @@
+:root {
+  --sl-font: 'Inter Variable', system-ui, sans-serif;
+  --sl-font-mono: 'JetBrains Mono Variable', ui-monospace, monospace;
+  --sl-color-accent-low: #00170a;
+  --sl-color-accent: #2fd96b;
+  --sl-color-accent-high: #00ff41;
+  --sl-color-white: #eef4ef;
+  --sl-color-gray-1: #d4dcd6;
+  --sl-color-gray-2: #a9b4ac;
+  --sl-color-gray-3: #76817a;
+  --sl-color-gray-4: #4a524c;
+  --sl-color-gray-5: #262b28;
+  --sl-color-gray-6: #141715;
+  --sl-color-black: #000;
+  --sl-color-bg-nav: #000;
+  --sl-color-bg-sidebar: #070807;
+  --sl-color-hairline: #1c211e;
+  --sl-color-hairline-shade: #141715;
+  --sl-content-width: 48rem;
+}
+
+.site-title {
+  gap: 0.55rem;
+  color: var(--sl-color-white);
+  font-family: var(--sl-font-mono);
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.site-title img {
+  width: 1.35rem;
+  height: 1.35rem;
+}

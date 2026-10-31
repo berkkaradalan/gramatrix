@@ -15,3 +15,7 @@ playwright-report/
 .idea/
 .vscode/
 Thumbs.db
+.astro/
+.vercel/
+website/src/content/docs/docs/
+website/public/providers/

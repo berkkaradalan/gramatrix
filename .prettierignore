@@ -2,3 +2,7 @@ out
 dist
 node_modules
 package-lock.json
+website/dist
+website/.astro
+website/src/content/docs/docs
+website/public/providers

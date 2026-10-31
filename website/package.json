@@ -1,0 +1,32 @@
+{
+  "name": "gramatrix-website",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Landing page and documentation for Gramatrix.",
+  "type": "module",
+  "engines": {
+    "node": ">=22.12"
+  },
+  "scripts": {
+    "sync:docs": "node scripts/sync-docs.mjs",
+    "dev": "npm run sync:docs && astro dev",
+    "build": "npm run sync:docs && astro build",
+    "preview": "astro preview",
+    "check": "npm run sync:docs && astro check"
+  },
+  "dependencies": {
+    "@astrojs/sitemap": "^3.7.4",
+    "@astrojs/starlight": "^0.40.0",
+    "@fontsource-variable/inter": "^5.3.0",
+    "@fontsource-variable/jetbrains-mono": "^5.3.0",
+    "astro": "^6.4.8",
+    "sharp": "^0.35.5"
+  },
+  "devDependencies": {
+    "@astrojs/check": "^0.9.12",
+    "typescript": "^6.0.3"
+  },
+  "overrides": {
+    "sharp": "$sharp"
+  }
+}

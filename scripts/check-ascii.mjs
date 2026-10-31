@@ -7,6 +7,7 @@ import { extname } from 'node:path'
 
 const BINARY_EXTENSIONS = new Set([
   '.png',
+  '.webp',
   '.ico',
   '.icns',
   '.jpg',

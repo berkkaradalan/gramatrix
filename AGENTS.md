@@ -23,6 +23,7 @@ Instructions for anyone, human or AI, changing this repository.
 | `src/renderer/` | React user interface.                                                         |
 | `tests/e2e/`    | Playwright tests against the built app.                                       |
 | `docs/`         | Documentation for users and contributors.                                     |
+| `website/`      | Landing page and docs site. Its docs pages are generated from `docs/`.        |
 
 ## Conventions
 

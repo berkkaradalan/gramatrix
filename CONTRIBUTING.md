@@ -46,6 +46,11 @@ AppImage, `.dmg` and `.zip` installers and publishes a GitHub release with gener
 Release builds are not signed yet. macOS blocks unsigned apps on first launch, and the keychain can
 ask for permission again after each update. Signing needs an Apple Developer certificate.
 
+## Website
+
+`website/` holds the landing page and docs site. See [website/README.md](website/README.md). The
+docs pages are generated from `docs/`, so a docs change updates the site on its next build.
+
 ## Common tasks
 
 ### Add an RPC method

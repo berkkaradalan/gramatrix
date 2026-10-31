@@ -6,6 +6,13 @@ import { createAgentHarness, createProjectDirectory, type AgentHarness } from '.
 
 const WRITE_CALL = { name: 'write_file', input: { path: 'out.txt', content: 'data' } }
 const COMMAND_CALL = { name: 'run_command', input: { command: 'touch ran.txt' } }
+
+/** Starts a process in its own session. It uses Node because macOS has no setsid command. */
+const START_DETACHED_CHILD = `node -e "
+  const child = require('child_process').spawn('sleep', ['30'], { detached: true, stdio: 'ignore' })
+  require('fs').writeFileSync('child.pid', String(child.pid))
+  child.unref()
+"`
 const SLOW_COMMAND_CALL = { name: 'run_command', input: { command: 'sleep 0.1' } }
 
 function toolParts(harness: AgentHarness): ToolCallPart[] {
@@ -579,7 +586,7 @@ describe('cancellation', () => {
         toolCalls: [
           {
             name: 'run_command',
-            input: { command: `setsid sh -c 'echo $$ > child.pid; exec sleep 30' & sleep 30` }
+            input: { command: `${START_DETACHED_CHILD} & sleep 30` }
           }
         ]
       }
@@ -633,7 +640,7 @@ describe('cancellation', () => {
         toolCalls: [
           {
             name: 'run_command',
-            input: { command: `setsid sh -c 'echo $$ > child.pid; exec sleep 30' &` }
+            input: { command: START_DETACHED_CHILD }
           }
         ]
       },

@@ -13,9 +13,13 @@ test('the app opens a window and reaches the host process', async () => {
 test('quitting stops the host and exits cleanly', async () => {
   const { app, page } = await launchApp()
   await expect(page).toHaveTitle('Gramatrix')
-  const exited = new Promise<void>((resolve) => app.process().once('exit', () => resolve()))
+  // Taken now, because Playwright can no longer return it once the app has closed.
+  const child = app.process()
+  const exited = new Promise<void>((resolve) => child.once('exit', () => resolve()))
   await app.evaluate(({ app }) => app.quit())
   await exited
-  const { exitCode, signalCode } = app.process()
-  expect({ exitCode, signalCode }).toEqual({ exitCode: 0, signalCode: null })
+  expect({ exitCode: child.exitCode, signalCode: child.signalCode }).toEqual({
+    exitCode: 0,
+    signalCode: null
+  })
 })

@@ -101,7 +101,10 @@ const HOME = { name: 'What should we work on?' }
 /** Walks through onboarding for real: the key goes through the actual secret store. */
 async function finishOnboarding(page: Page): Promise<void> {
   await page.getByRole('button', { name: 'Get started' }).click()
-  await expect(page.getByText('saved keys are not really protected')).toBeVisible()
+  // Tests use the weak Linux fallback. macOS always has its keychain, so it shows no warning.
+  if (process.platform === 'linux') {
+    await expect(page.getByText('saved keys are not really protected')).toBeVisible()
+  }
   await page.getByRole('button', { name: /OpenRouter/ }).click()
   const dialog = page.getByRole('dialog')
   await dialog.getByLabel('API key').fill('test-key')

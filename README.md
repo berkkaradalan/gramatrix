@@ -1,5 +1,7 @@
 # Gramatrix
 
+[![CI](https://github.com/berkkaradalan/gramatrix/actions/workflows/ci.yml/badge.svg)](https://github.com/berkkaradalan/gramatrix/actions/workflows/ci.yml)
+
 A desktop AI coding agent for macOS and Linux. Bring your own API key, open a project, and work
 with an agent that can read code, edit files and run commands, with you in control of what it
 may do.

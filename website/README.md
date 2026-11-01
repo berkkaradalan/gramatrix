@@ -25,8 +25,11 @@ Documentation lives in the repository's `docs/` folder. Do not edit the generate
 
 ## Downloads
 
-The buttons find their files in the latest GitHub release when the page loads. Until a release
-exists, the cards are disabled and the page says so.
+The Linux rows find their files in the latest GitHub release when the page loads. Until a release
+exists, they are disabled and the page says so.
+
+Mac visitors get the install command instead. `public/install.sh` is served at
+`gramatrix.com/install.sh`. See [CONTRIBUTING.md](../CONTRIBUTING.md#releasing).
 
 ## Replacing the logo
 

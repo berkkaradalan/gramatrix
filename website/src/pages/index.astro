@@ -3,7 +3,14 @@ import '@fontsource-variable/inter'
 import '@fontsource-variable/jetbrains-mono'
 import '../styles/site.css'
 import Icon from '../components/Icon.astro'
-import { DESCRIPTION, PROVIDERS, RELEASES_URL, REPOSITORY_URL, TAGLINE } from '../data/site'
+import {
+  DESCRIPTION,
+  MAC_INSTALL_COMMAND,
+  PROVIDERS,
+  RELEASES_URL,
+  REPOSITORY_URL,
+  TAGLINE
+} from '../data/site'
 
 const features = [
   {
@@ -36,21 +43,9 @@ const features = [
   }
 ]
 
-const platforms = [
-  {
-    name: 'macOS',
-    builds: [
-      { key: 'mac-arm64', label: 'Apple Silicon' },
-      { key: 'mac-x64', label: 'Intel' }
-    ]
-  },
-  {
-    name: 'Linux',
-    builds: [
-      { key: 'linux-deb', label: 'Debian and Ubuntu (.deb)' },
-      { key: 'linux-appimage', label: 'AppImage' }
-    ]
-  }
+const linuxBuilds = [
+  { key: 'linux-deb', label: 'Debian and Ubuntu (.deb)' },
+  { key: 'linux-appimage', label: 'AppImage' }
 ]
 
 const title = `Gramatrix - ${TAGLINE}`
@@ -181,29 +176,38 @@ const socialImage = new URL('/og.png', Astro.site).href
         <h2>Download</h2>
         <p class="status" data-release-status>Choose your system.</p>
         <div class="downloads">
-          {
-            platforms.map(({ name, builds }) => (
-              <div>
-                <h3>{name}</h3>
-                <ul>
-                  {builds.map(({ key, label }) => (
-                    <li>
-                      <a class="download-row" href={RELEASES_URL} data-card={key}>
-                        {label}
-                        <span class="recommended">Your system</span>
-                        <small data-size />
-                        <Icon name="download" />
-                      </a>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ))
-          }
+          <div data-mac-install>
+            <h3>macOS <span class="recommended">Your system</span></h3>
+            <div class="install-command">
+              <code>{MAC_INSTALL_COMMAND}</code>
+              <button type="button" data-copy={MAC_INSTALL_COMMAND}>Copy</button>
+            </div>
+            <p class="install-note">
+              Paste this into Terminal once. Gramatrix goes into your Applications folder and opens
+              from Launchpad, Spotlight or the Dock like any other app.
+            </p>
+          </div>
+          <div>
+            <h3>Linux</h3>
+            <ul>
+              {
+                linuxBuilds.map(({ key, label }) => (
+                  <li>
+                    <a class="download-row" href={RELEASES_URL} data-card={key}>
+                      {label}
+                      <span class="recommended">Your system</span>
+                      <small data-size />
+                      <Icon name="download" />
+                    </a>
+                  </li>
+                ))
+              }
+            </ul>
+          </div>
         </div>
         <p class="fine">
-          Mac builds are not signed yet, so macOS warns on first launch. Windows is not supported
-          yet. Want to contribute? <a href="/docs/contributing/">Start here</a>.
+          The Mac app is not signed by Apple yet, which is why it installs from Terminal. Windows is
+          not supported yet. Want to contribute? <a href="/docs/contributing/">Start here</a>.
         </p>
       </section>
     </main>
@@ -223,7 +227,7 @@ const socialImage = new URL('/og.png', Astro.site).href
 
     <script>
       import { startAsciiField, startAsciiWordmark } from '../scripts/ascii-field'
-      import { connectDownloads } from '../scripts/downloads'
+      import { connectCopyButtons, connectDownloads } from '../scripts/downloads'
       import { startFeatureTour } from '../scripts/feature-tour'
 
       const tour = document.querySelector<HTMLElement>('[data-tour]')
@@ -233,6 +237,7 @@ const socialImage = new URL('/og.png', Astro.site).href
       const wordmark = document.querySelector<HTMLCanvasElement>('[data-wordmark]')
       if (wordmark) startAsciiWordmark(wordmark, 'GRAMATRIX')
       void connectDownloads()
+      connectCopyButtons()
     </script>
   </body>
 </html>

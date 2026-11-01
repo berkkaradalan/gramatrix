@@ -3,6 +3,21 @@
 Gramatrix is a desktop coding agent for macOS and Linux. It uses your own API keys and works
 inside folders you choose. You can also chat with it without any folder.
 
+## Install
+
+**macOS.** Open Terminal, paste this command and press `Enter`.
+
+```sh
+curl -fsSL https://gramatrix.com/install.sh | bash
+```
+
+You only do this once. Gramatrix goes into your Applications folder and opens, and from then on you
+start it from Launchpad, Spotlight or the Dock like any other app. To update, run the same command
+again. To remove Gramatrix, move it from Applications to the Trash.
+
+**Linux.** Download the `.deb` from [gramatrix.com](https://gramatrix.com/#download) and open it.
+Gramatrix then appears in your applications menu.
+
 ## First start
 
 Setup has three steps, and every step can be skipped. If you close the app it continues where you

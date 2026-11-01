@@ -7,8 +7,14 @@ files:
   - out/**
   - package.json
 mac:
-  target: [dmg, zip]
+  # website/public/install.sh downloads these zips by name.
+  target: [zip]
+  artifactName: ${productName}-mac-${arch}.${ext}
   category: public.app-category.developer-tools
+  # There is no Apple Developer certificate yet. Apple Silicon needs at least an ad-hoc signature,
+  # and an ad-hoc signed app cannot start with the hardened runtime on.
+  identity: '-'
+  hardenedRuntime: false
 linux:
   target: [AppImage, deb]
   category: Development

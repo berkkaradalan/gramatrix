@@ -23,21 +23,15 @@ may do.
 
 ## Install
 
-**macOS:** paste this into Terminal once.
+On macOS, Debian or Ubuntu, paste this into a terminal once.
 
 ```sh
 curl -fsSL https://gramatrix.com/install.sh | bash
 ```
 
-Gramatrix goes into your Applications folder and opens from Launchpad, Spotlight or the Dock like
-any other app. Run the command again to update.
-
-**Linux:** download the `.deb` from [gramatrix.com](https://gramatrix.com/#download) and open it.
-Gramatrix then appears in your applications menu.
-
-Prefer the `.deb` over the AppImage. It installs the AppArmor profile that Ubuntu 24.04 and newer
-need for the Chromium sandbox. The AppImage cannot install that profile and also needs FUSE. On
-those systems it only starts with `--no-sandbox`, which turns off a security layer.
+Gramatrix installs next to your other apps and opens like any of them. Run the command again to
+update. On Linux you can also download the `.deb` from
+[gramatrix.com](https://gramatrix.com/#download) instead.
 
 To work on Gramatrix itself, see [CONTRIBUTING.md](CONTRIBUTING.md).
 

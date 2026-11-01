@@ -33,8 +33,8 @@ npm run dist:mac
 npm run dist:linux
 ```
 
-Installers are written to `dist/`. To build the current checkout and install it on a Mac the way a
-user gets it, run this in the repository root. It needs no release:
+Installers are written to `dist/`. To build the current checkout and install it the way a user gets
+it on a Mac, Debian or Ubuntu, run this in the repository root. It needs no release:
 
 ```sh
 ./install.sh
@@ -56,15 +56,16 @@ a ruleset** and select that file.
 1. Set the new version in `package.json` and merge that pull request to `main`.
 2. Tag that commit and push the tag, for example `git tag v0.2.0 && git push origin v0.2.0`.
 
-`.github/workflows/release.yml` then checks that the tag matches `package.json`, builds the `.deb`,
-AppImage and Mac `.zip` installers, adds a `SHA256SUMS` file and publishes a GitHub release with
-generated notes.
+`.github/workflows/release.yml` then checks that the tag matches `package.json`, builds the `.deb`
+and Mac `.zip` installers, adds a `SHA256SUMS` file and publishes a GitHub release with generated
+notes.
 
 Mac builds only have an ad-hoc signature, because a real one needs an Apple Developer certificate.
 macOS blocks such apps when they come from a browser, so Mac users install with
-`website/public/install.sh`, served at `gramatrix.com/install.sh`. The script relies on two fixed
-names, `Gramatrix-mac-<arch>.zip` from `electron-builder.yml` and `SHA256SUMS` from the release
-workflow. The keychain can also ask for permission again after each update.
+`website/public/install.sh`, served at `gramatrix.com/install.sh`. Linux users can use the same
+command. The script relies on fixed names: `Gramatrix-mac-<arch>.zip` and
+`gramatrix-linux-amd64.deb` from `electron-builder.yml`, and `SHA256SUMS` from the release workflow.
+The keychain can also ask for permission again after each update.
 
 ## Website
 

@@ -46,7 +46,14 @@ const FAKE_COMMANDS: Record<string, string> = {
     esac`,
   pgrep: 'exit 1',
   open: 'exit 0',
-  osascript: 'exit 0'
+  osascript: 'exit 0',
+  id: 'echo "${FAKE_UID:-1000}"',
+  dpkg: 'echo "${FAKE_DEB_ARCH:-amd64}"',
+  sudo: '"$@"',
+  'apt-get': `
+    [ -z "\${FAKE_APT_FAILS:-}" ] || exit 100
+    cp "$3" "$FAKE_LOG.installed"`,
+  setsid: 'exit 0'
 }
 
 describe('install.sh', () => {
@@ -69,6 +76,7 @@ describe('install.sh', () => {
         PATH: `${bin}:/usr/bin:/bin`,
         HOME: root,
         FAKE_RELEASE: release,
+        FAKE_LOG: log,
         GRAMATRIX_INSTALL_DIR: apps,
         ...env
       }
@@ -115,11 +123,11 @@ describe('install.sh', () => {
     expect(calls()).toContain('Gramatrix-mac-x64.zip')
   })
 
-  it('refuses to run outside macOS', () => {
-    const { status, output } = install({ FAKE_OS: 'Linux' })
+  it('refuses to run on a system it does not support', () => {
+    const { status, output } = install({ FAKE_OS: 'FreeBSD' })
 
     expect(status).toBe(1)
-    expect(output).toContain('This installer is for macOS')
+    expect(output).toContain('Gramatrix runs on macOS, Debian and Ubuntu')
     expect(calls()).not.toContain('curl')
   })
 
@@ -196,8 +204,88 @@ describe('install.sh', () => {
     const zip = join(root, 'local.zip')
     writeFileSync(zip, 'a local build')
 
-    expect(install({ GRAMATRIX_ZIP: zip }).status).toBe(0)
+    expect(install({ GRAMATRIX_PACKAGE: zip }).status).toBe(0)
     expect(readFileSync(join(installedApp(), 'Contents/marker'), 'utf8')).toBe('a local build')
     expect(calls()).not.toContain('curl')
+  })
+
+  describe('on Linux', () => {
+    const LINUX = { FAKE_OS: 'Linux', DISPLAY: ':0' }
+    const installedPackage = (): string => `${log}.installed`
+
+    it('installs the release package with apt and opens the app', () => {
+      publishRelease('gramatrix-linux-amd64.deb')
+
+      const { status, output } = install(LINUX)
+
+      expect(status).toBe(0)
+      expect(readFileSync(installedPackage(), 'utf8')).toBe(RELEASE_ZIP)
+      expect(calls()).toContain('sudo apt-get install -y')
+      expect(calls()).toContain('setsid --fork gramatrix')
+      expect(output).toContain('applications menu')
+    })
+
+    it('does not use sudo for root and does not start the app as root', () => {
+      publishRelease('gramatrix-linux-amd64.deb')
+
+      expect(install({ ...LINUX, FAKE_UID: '0' }).status).toBe(0)
+      expect(calls()).not.toContain('sudo')
+      expect(calls()).not.toContain('setsid')
+    })
+
+    it('does not try to open the app without a desktop session', () => {
+      publishRelease('gramatrix-linux-amd64.deb')
+
+      expect(install({ FAKE_OS: 'Linux' }).status).toBe(0)
+      expect(calls()).not.toContain('setsid')
+    })
+
+    it('keeps the system untouched when the checksum does not match', () => {
+      publishRelease('gramatrix-linux-amd64.deb', 'something else')
+
+      const { status, output } = install(LINUX)
+
+      expect(status).toBe(1)
+      expect(output).toContain('damaged or incomplete')
+      expect(calls()).not.toContain('apt-get')
+    })
+
+    it('reports when apt fails', () => {
+      publishRelease('gramatrix-linux-amd64.deb')
+
+      const { status, output } = install({ ...LINUX, FAKE_APT_FAILS: '1' })
+
+      expect(status).toBe(1)
+      expect(output).toContain('apt could not install Gramatrix')
+      expect(calls()).not.toContain('setsid')
+    })
+
+    it('refuses a Linux without apt', () => {
+      rmSync(join(bin, 'apt-get'))
+
+      const result = spawnSync('/bin/bash', [SCRIPT], {
+        encoding: 'utf8',
+        env: { PATH: bin, FAKE_OS: 'Linux' }
+      })
+
+      expect(result.status).toBe(1)
+      expect(result.stderr).toContain('Debian, Ubuntu and systems based on them')
+    })
+
+    it('refuses processors it has no build for', () => {
+      const { status, output } = install({ ...LINUX, FAKE_DEB_ARCH: 'arm64' })
+
+      expect(status).toBe(1)
+      expect(output).toContain('64-bit Intel and AMD')
+    })
+
+    it('installs a local build without downloading anything', () => {
+      const deb = join(root, 'local.deb')
+      writeFileSync(deb, 'a local build')
+
+      expect(install({ ...LINUX, GRAMATRIX_PACKAGE: deb }).status).toBe(0)
+      expect(readFileSync(installedPackage(), 'utf8')).toBe('a local build')
+      expect(calls()).not.toContain('curl')
+    })
   })
 })

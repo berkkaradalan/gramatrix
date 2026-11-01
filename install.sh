@@ -1,12 +1,12 @@
 #!/bin/bash
 #
-# Builds Gramatrix from this repository and installs it on macOS:
+# Builds Gramatrix from this repository and installs it on macOS, Debian or Ubuntu:
 #
 #   ./install.sh
 #
-# Gramatrix ends up in the Applications folder and opens by itself. This needs no release, so it
-# also tests the Mac install before one exists. website/public/install.sh does the same from the
-# latest release, and this script hands its build to that one so both install the same way.
+# Gramatrix ends up with your other apps and opens by itself. This needs no release, so it also
+# tests the install before one exists. website/public/install.sh does the same from the latest
+# release, and this script hands its build to that one so both install the same way.
 
 set -euo pipefail
 
@@ -38,29 +38,43 @@ check_node() {
   local major
   major=$(node -p 'process.versions.node.split(".")[0]')
   [ "$major" -ge "$MINIMUM_NODE_MAJOR" ] ||
-    fail "Building Gramatrix needs Node.js $MINIMUM_NODE_MAJOR or newer, and this Mac has $major. Get it from $NODE_URL"
+    fail "Building Gramatrix needs Node.js $MINIMUM_NODE_MAJOR or newer, and this computer has $major. Get it from $NODE_URL"
 }
 
 # Checks the hardware instead of `uname -m`, which reports x86_64 inside a Rosetta terminal.
-detect_architecture() {
+detect_mac_architecture() {
   if [ "$(sysctl -in hw.optional.arm64)" = '1' ]; then echo 'arm64'; else echo 'x64'; fi
 }
 
 main() {
-  [ "$(uname -s)" = 'Darwin' ] || fail 'This installer is for macOS.'
+  local system package architecture
+  local -a targets
+  system=$(uname -s)
+  case "$system" in
+    Darwin)
+      architecture=$(detect_mac_architecture)
+      targets=(--mac "--$architecture")
+      package="dist/Gramatrix-mac-$architecture.zip"
+      ;;
+    Linux)
+      command -v apt-get >/dev/null ||
+        fail 'On Linux, Gramatrix installs on Debian, Ubuntu and systems based on them.'
+      targets=(--linux deb --x64)
+      package='dist/gramatrix-linux-amd64.deb'
+      ;;
+    *) fail 'Gramatrix runs on macOS, Debian and Ubuntu.' ;;
+  esac
+
   cd "$(dirname "$0")"
   check_node
-
-  local architecture
-  architecture=$(detect_architecture)
   build_log=$(mktemp -t gramatrix-build.XXXXXX)
 
   say 'Building Gramatrix. The first build takes a few minutes...'
   run_quietly npm ci
   run_quietly npm run build
-  run_quietly npx electron-builder --mac "--$architecture" --publish never
+  run_quietly npx electron-builder "${targets[@]}" --publish never
 
-  GRAMATRIX_ZIP="$PWD/dist/Gramatrix-mac-$architecture.zip" bash website/public/install.sh
+  GRAMATRIX_PACKAGE="$PWD/$package" bash website/public/install.sh
 }
 
 main "$@"

@@ -21,12 +21,22 @@ const FAKE_COMMANDS: Record<string, string> = {
   sysctl: 'echo "${FAKE_ARM64:-1}"',
   node: 'echo "${FAKE_NODE_MAJOR:-22}"',
   npm: '[ -z "${FAKE_BUILD_FAILS:-}" ] || { echo "the compiler said no"; exit 1; }',
-  npx: 'mkdir -p dist && echo "built for $3" > "dist/Gramatrix-mac-${3#--}.zip"',
+  npx: `
+    mkdir -p dist
+    case "$2" in
+      --mac) echo "built for $3" > "dist/Gramatrix-mac-\${3#--}.zip" ;;
+      --linux) echo 'built deb' > dist/gramatrix-linux-amd64.deb ;;
+    esac`,
   ditto: 'mkdir -p "$4/Gramatrix.app/Contents" && cp "$3" "$4/Gramatrix.app/Contents/marker"',
   codesign: 'exit 0',
   pgrep: 'exit 1',
   open: 'exit 0',
-  osascript: 'exit 0'
+  osascript: 'exit 0',
+  id: 'echo 1000',
+  dpkg: 'echo amd64',
+  sudo: '"$@"',
+  'apt-get': 'cp "$3" "$FAKE_LOG.installed"',
+  setsid: 'exit 0'
 }
 
 describe('install.sh in the repository root', () => {
@@ -42,6 +52,7 @@ describe('install.sh in the repository root', () => {
       env: {
         PATH: `${bin}:/usr/bin:/bin`,
         HOME: root,
+        FAKE_LOG: log,
         GRAMATRIX_INSTALL_DIR: apps,
         ...env
       }
@@ -98,11 +109,33 @@ describe('install.sh in the repository root', () => {
     expect(calls()).not.toContain('curl')
   })
 
-  it('refuses to run outside macOS', () => {
+  it('builds the .deb on Linux and installs it with apt', () => {
     const { status, output } = install({ FAKE_OS: 'Linux' })
 
+    expect(status).toBe(0)
+    expect(calls()).toContain('npx electron-builder --linux deb --x64 --publish never')
+    expect(readFileSync(`${log}.installed`, 'utf8')).toContain('built deb')
+    expect(output).toContain('applications menu')
+  })
+
+  it('stops before building on a Linux without apt', () => {
+    rmSync(join(bin, 'apt-get'))
+
+    const result = spawnSync('/bin/bash', [join(repository, 'install.sh')], {
+      encoding: 'utf8',
+      env: { PATH: bin, FAKE_OS: 'Linux' }
+    })
+
+    expect(result.status).toBe(1)
+    expect(result.stderr).toContain('Debian, Ubuntu and systems based on them')
+    expect(calls()).not.toContain('npm')
+  })
+
+  it('refuses to run on a system it does not support', () => {
+    const { status, output } = install({ FAKE_OS: 'FreeBSD' })
+
     expect(status).toBe(1)
-    expect(output).toContain('This installer is for macOS')
+    expect(output).toContain('Gramatrix runs on macOS, Debian and Ubuntu')
     expect(calls()).not.toContain('npm')
   })
 

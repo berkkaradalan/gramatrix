@@ -25,15 +25,15 @@ Documentation lives in the repository's `docs/` folder. Do not edit the generate
 
 ## Downloads
 
-The Linux rows find their files in the latest GitHub release when the page loads. Until a release
-exists, they are disabled and the page says so.
-
-Mac visitors get the install command instead. `public/install.sh` is served at
+The page shows one install command for macOS and Linux. `public/install.sh` is served at
 `gramatrix.com/install.sh`. See [CONTRIBUTING.md](../CONTRIBUTING.md#releasing).
+
+The `.deb` row finds its file in the latest GitHub release when the page loads. Until a release
+exists, it is disabled and the page says so.
 
 ## Replacing the logo
 
-Replace `public/logo.svg`, `src/assets/logo.svg` and `public/favicon.svg`, then the PNG exports:
+Replace `public/logo.svg`, `src/assets/logo.svg` and `public/favicon.svg`, then the PNG exports and the Linux icons in `build/icons/`:
 `public/favicon.ico` (48px), `public/icon.png` (512px), `public/apple-touch-icon.png` (180px, no
 transparency) and `public/og.png` (1200x630), the image shown when a link is shared.
 

@@ -5,18 +5,21 @@ inside folders you choose. You can also chat with it without any folder.
 
 ## Install
 
-**macOS.** Open Terminal, paste this command and press `Enter`.
+**macOS, Debian and Ubuntu.** Open a terminal, paste this command and press `Enter`.
 
 ```sh
 curl -fsSL https://gramatrix.com/install.sh | bash
 ```
 
-You only do this once. Gramatrix goes into your Applications folder and opens, and from then on you
-start it from Launchpad, Spotlight or the Dock like any other app. To update, run the same command
-again. To remove Gramatrix, move it from Applications to the Trash.
+You only do this once. Gramatrix installs and opens, and from then on you start it like any other
+app: from Launchpad, Spotlight or the Dock on a Mac, or from the applications menu on Linux. On
+Linux the command asks for your password. To update, run the same command again.
 
-**Linux.** Download the `.deb` from [gramatrix.com](https://gramatrix.com/#download) and open it.
-Gramatrix then appears in your applications menu.
+**Linux package.** You can also download the `.deb` from
+[gramatrix.com](https://gramatrix.com/#download) and open it.
+
+To remove Gramatrix on a Mac, move it from Applications to the Trash. On Linux, run
+`sudo apt remove gramatrix`.
 
 ## First start
 

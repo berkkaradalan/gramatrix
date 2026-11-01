@@ -431,6 +431,197 @@ h2 {
   gap: 32px 56px;
 }
 
+.install-command {
+  color: var(--muted);
+}
+
+.tour {
+  position: relative;
+  z-index: 2;
+  max-width: var(--width);
+  margin: -110px auto 0;
+  padding: 0 var(--gutter);
+}
+
+.tour-tabs {
+  display: flex;
+  gap: 6px;
+  margin-top: 12px;
+}
+
+.tour-tab {
+  position: relative;
+  width: 32px;
+  height: 24px;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+}
+
+.tour-tab::before,
+.tour-tab::after {
+  content: '';
+  position: absolute;
+  inset: 11px 0 auto;
+  height: 2px;
+  border-radius: 2px;
+  background: var(--line-strong);
+}
+
+.tour-tab:hover::before {
+  background: var(--muted);
+}
+
+.tour-tab::after {
+  background: var(--green);
+  transform: scaleX(0);
+  transform-origin: left;
+}
+
+.tour-tab[aria-selected='true']::after {
+  transform: scaleX(1);
+}
+
+.tour[data-rotating] .tour-tab[aria-selected='true']::after {
+  animation: tour-progress 6s linear paused;
+}
+
+.tour[data-rotating][data-visible='true'] .tour-tab[aria-selected='true']::after {
+  animation-play-state: running;
+}
+
+.tour[data-rotating][data-visible='true']:focus-within .tour-tab[aria-selected='true']::after {
+  animation-play-state: paused;
+}
+
+@media (hover: hover) {
+  .tour[data-rotating][data-visible='true']:hover .tour-tab[aria-selected='true']::after {
+    animation-play-state: paused;
+  }
+}
+
+@keyframes tour-progress {
+  from {
+    transform: scaleX(0);
+  }
+
+  to {
+    transform: scaleX(1);
+  }
+}
+
+/* Panels share one grid cell, and subgrid keeps every caption the same height so the page does
+   not jump between features. */
+.tour-stage {
+  display: grid;
+  grid-template-rows: auto auto;
+}
+
+.tour-panel {
+  display: grid;
+  grid-area: 1 / 1 / 3 / 2;
+  grid-template-rows: subgrid;
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    opacity 0.35s,
+    visibility 0.35s;
+}
+
+.tour-panel[data-active='true'] {
+  opacity: 1;
+  visibility: visible;
+}
+
+.tour-panel img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border: 1px solid var(--line-strong);
+  border-radius: 12px;
+}
+
+.tour-copy {
+  padding-top: 20px;
+}
+
+.tour-copy h2 {
+  font-size: 20px;
+  letter-spacing: -0.02em;
+}
+
+.tour-copy p {
+  max-width: 660px;
+  margin-top: 6px;
+  color: var(--muted);
+  font-size: 15px;
+}
+
+.providers {
+  max-width: var(--width);
+  margin: 88px auto 0;
+  padding: 0 var(--gutter);
+  text-align: center;
+}
+
+.providers ul {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 14px 34px;
+}
+
+.providers li {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  color: #c3ccc5;
+  font-weight: 500;
+  font-size: 15px;
+}
+
+.providers img {
+  filter: brightness(0) invert(1);
+  opacity: 0.85;
+}
+
+.section {
+  max-width: var(--width);
+  margin: 128px auto 0;
+  padding: 0 var(--gutter);
+}
+
+h2 {
+  font-size: clamp(26px, 3.2vw, 36px);
+  line-height: 1.15;
+  letter-spacing: -0.03em;
+  font-weight: 650;
+}
+
+.fine {
+  margin-top: 20px;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.fine a {
+  color: var(--text);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.fine strong {
+  color: var(--text);
+  font-weight: 550;
+}
+
+.downloads {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 32px 56px;
+}
+
 .downloads > div {
   min-width: 0;
 }
@@ -471,7 +662,7 @@ h2 {
 }
 
 .install-note {
-  margin-top: 12px;
+  margin: 12px 0 24px;
   color: var(--muted);
   font-size: 14px;
 }
@@ -481,13 +672,9 @@ h2 {
   align-items: center;
   gap: 12px;
   padding: 13px 0;
-  border-top: 1px solid var(--line);
+  border-block: 1px solid var(--line);
   font-size: 15px;
   transition: color 0.15s;
-}
-
-li:last-child > .download-row {
-  border-bottom: 1px solid var(--line);
 }
 
 .download-row:hover {
@@ -502,20 +689,6 @@ li:last-child > .download-row {
 
 .download-row svg {
   flex: none;
-}
-
-.recommended {
-  display: none;
-  color: var(--green);
-  font: 400 12px var(--mono);
-}
-
-.is-recommended .recommended {
-  display: inline;
-}
-
-.downloads h3 .recommended {
-  margin-left: 8px;
 }
 
 .wordmark {
@@ -568,10 +741,6 @@ li:last-child > .download-row {
 @media (max-width: 620px) {
   .nav nav a:not([href='/docs/']) {
     display: none;
-  }
-
-  .downloads {
-    grid-template-columns: 1fr;
   }
 
   .hero {

@@ -5,6 +5,8 @@ conventions, and it applies to human and AI contributors alike.
 
 ## Setup
 
+You need Node.js 22 or newer.
+
 ```sh
 npm install
 npm run dev
@@ -24,6 +26,20 @@ npm run test:e2e
 `npm run check` covers the ASCII rule, types, lint and unit tests. The end to end tests need a
 display. On a headless Linux machine, run them under a virtual display such as `xvfb-run`.
 
+## Building installers
+
+```sh
+npm run dist:mac
+npm run dist:linux
+```
+
+Installers are written to `dist/`. To try a Mac build the way a user gets it, run it through the
+install script:
+
+```sh
+GRAMATRIX_ZIP=dist/Gramatrix-mac-arm64.zip bash website/public/install.sh
+```
+
 ## Continuous integration
 
 `.github/workflows/ci.yml` runs `npm run check` and the end to end tests on Linux and macOS for every
@@ -41,10 +57,14 @@ a ruleset** and select that file.
 2. Tag that commit and push the tag, for example `git tag v0.2.0 && git push origin v0.2.0`.
 
 `.github/workflows/release.yml` then checks that the tag matches `package.json`, builds the `.deb`,
-AppImage, `.dmg` and `.zip` installers and publishes a GitHub release with generated notes.
+AppImage and Mac `.zip` installers, adds a `SHA256SUMS` file and publishes a GitHub release with
+generated notes.
 
-Release builds are not signed yet. macOS blocks unsigned apps on first launch, and the keychain can
-ask for permission again after each update. Signing needs an Apple Developer certificate.
+Mac builds only have an ad-hoc signature, because a real one needs an Apple Developer certificate.
+macOS blocks such apps when they come from a browser, so Mac users install with
+`website/public/install.sh`, served at `gramatrix.com/install.sh`. The script relies on two fixed
+names, `Gramatrix-mac-<arch>.zip` from `electron-builder.yml` and `SHA256SUMS` from the release
+workflow. The keychain can also ask for permission again after each update.
 
 ## Website
 

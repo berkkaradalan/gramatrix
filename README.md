@@ -21,30 +21,25 @@ may do.
 - **Customizable:** 22 themes, separate code themes, fonts, window transparency and a video
   background.
 
-## Getting started
+## Install
 
-You need Node.js 22 or newer.
-
-```sh
-npm install
-npm run dev
-```
-
-The app walks you through connecting a provider and picking a default model.
-
-## Building installers
+**macOS:** paste this into Terminal once.
 
 ```sh
-npm run dist:mac
-npm run dist:linux
+curl -fsSL https://gramatrix.com/install.sh | bash
 ```
 
-Installers are written to `dist/`. macOS builds must be signed for the keychain to remember its
-permission across updates. See [docs/architecture.md](docs/architecture.md#secrets).
+Gramatrix goes into your Applications folder and opens from Launchpad, Spotlight or the Dock like
+any other app. Run the command again to update.
 
-On Linux, prefer the `.deb` package. It installs the AppArmor profile that Ubuntu 24.04 and newer
+**Linux:** download the `.deb` from [gramatrix.com](https://gramatrix.com/#download) and open it.
+Gramatrix then appears in your applications menu.
+
+Prefer the `.deb` over the AppImage. It installs the AppArmor profile that Ubuntu 24.04 and newer
 need for the Chromium sandbox. The AppImage cannot install that profile and also needs FUSE. On
 those systems it only starts with `--no-sandbox`, which turns off a security layer.
+
+To work on Gramatrix itself, see [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Security
 

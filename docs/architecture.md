@@ -69,7 +69,8 @@ and saves it only if the test passes. The value never reaches the renderer.
 Two platform details matter:
 
 - **macOS** may ask for keychain access once. Permission is tied to the code signature, so unsigned
-  builds can be asked again after each rebuild. Release builds must be signed.
+  builds can be asked again after each rebuild. Releases only have an ad-hoc signature for now, so
+  this can happen after an update until they are signed with a developer certificate.
 - **Linux** needs a secret service such as GNOME Keyring or KWallet. Without one, `safeStorage`
   falls back to a hardcoded password and offers no real protection. The app reports this as the
   `weak` backend and warns the user.

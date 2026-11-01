@@ -19,9 +19,6 @@ jobs:
             targets: --linux
           - os: macos-latest
             targets: --mac --arm64 --x64
-    env:
-      # Release builds are unsigned for now. See the release notes in CONTRIBUTING.md.
-      CSC_IDENTITY_AUTO_DISCOVERY: false
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
@@ -41,7 +38,6 @@ jobs:
           path: |
             dist/*.deb
             dist/*.AppImage
-            dist/*.dmg
             dist/*.zip
 
   publish:
@@ -58,4 +54,7 @@ jobs:
       - name: Create the release
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release create "$GITHUB_REF_NAME" installers/* --repo "$GITHUB_REPOSITORY" --generate-notes
+        run: |
+          # website/public/install.sh checks its download against this file.
+          (cd installers && sha256sum -- * > SHA256SUMS)
+          gh release create "$GITHUB_REF_NAME" installers/* --repo "$GITHUB_REPOSITORY" --generate-notes

@@ -1,5 +1,6 @@
 // Connects the download buttons to the latest GitHub release. File names can change between
-// versions, so each button finds its file by type instead of relying on a fixed link.
+// versions, so each button finds its file by type instead of relying on a fixed link. The Mac app
+// installs through website/public/install.sh, so Mac visitors are sent to that command instead.
 
 const LATEST_RELEASE_API = 'https://api.github.com/repos/berkkaradalan/gramatrix/releases/latest'
 
@@ -14,27 +15,22 @@ interface Release {
   assets: ReleaseAsset[]
 }
 
-type Platform = 'mac-arm64' | 'mac-x64' | 'linux-deb' | 'linux-appimage'
+type Platform = 'linux-deb' | 'linux-appimage'
 
 const MATCHERS: Record<Platform, (name: string) => boolean> = {
-  'mac-arm64': (name) => name.endsWith('.dmg') && /arm64/i.test(name),
-  'mac-x64': (name) => name.endsWith('.dmg') && !/arm64/i.test(name),
   'linux-deb': (name) => name.endsWith('.deb'),
   'linux-appimage': (name) => name.endsWith('.AppImage')
 }
 
-const PRIMARY_LABELS: Record<Platform, string> = {
-  'mac-arm64': 'Download for Mac',
-  'mac-x64': 'Download for Mac',
-  'linux-deb': 'Download for Linux',
-  'linux-appimage': 'Download for Linux'
-}
+const LINUX_LABEL = 'Download for Linux'
+const MAC_LABEL = 'Install on Mac'
+const COPIED_MESSAGE_MS = 1500
 
-function detectPlatform(): Platform | null {
+function detectSystem(): 'mac' | 'linux' | null {
   const agent = navigator.userAgent
   if (/Windows/i.test(agent) || /Android|iPhone|iPad/i.test(agent)) return null
-  if (/Macintosh|Mac OS X/i.test(agent)) return 'mac-arm64'
-  return /Linux/i.test(agent) ? 'linux-deb' : null
+  if (/Macintosh|Mac OS X/i.test(agent)) return 'mac'
+  return /Linux/i.test(agent) ? 'linux' : null
 }
 
 function formatSize(bytes: number): string {
@@ -60,12 +56,16 @@ async function fetchRelease(): Promise<Release | 'none' | 'unknown'> {
 }
 
 export async function connectDownloads(): Promise<void> {
-  const platform = detectPlatform()
+  const system = detectSystem()
   const primaries = document.querySelectorAll<HTMLAnchorElement>('[data-primary-download]')
-  document.documentElement.dataset['platform'] = platform ?? 'other'
-  if (platform) {
-    primaries.forEach((link) => setPrimary(link, PRIMARY_LABELS[platform], '#download'))
-    document.querySelector(`[data-card="${platform}"]`)?.classList.add('is-recommended')
+  document.documentElement.dataset['platform'] = system ?? 'other'
+  if (system === 'mac') {
+    primaries.forEach((link) => setPrimary(link, MAC_LABEL, '#download'))
+    document.querySelector('[data-mac-install]')?.classList.add('is-recommended')
+  }
+  if (system === 'linux') {
+    primaries.forEach((link) => setPrimary(link, LINUX_LABEL, '#download'))
+    document.querySelector('[data-card="linux-deb"]')?.classList.add('is-recommended')
   }
 
   const release = await fetchRelease()
@@ -87,8 +87,19 @@ export async function connectDownloads(): Promise<void> {
     card.href = asset.browser_download_url
     const size = card.querySelector('[data-size]')
     if (size) size.textContent = formatSize(asset.size)
-    if (key === platform) {
-      primaries.forEach((link) => setPrimary(link, PRIMARY_LABELS[key], asset.browser_download_url))
+    if (system === 'linux' && key === 'linux-deb') {
+      primaries.forEach((link) => setPrimary(link, LINUX_LABEL, asset.browser_download_url))
     }
+  }
+}
+
+export function connectCopyButtons(): void {
+  for (const button of document.querySelectorAll<HTMLButtonElement>('[data-copy]')) {
+    const label = button.textContent
+    button.addEventListener('click', async () => {
+      await navigator.clipboard.writeText(button.dataset['copy'] ?? '')
+      button.textContent = 'Copied'
+      setTimeout(() => (button.textContent = label), COPIED_MESSAGE_MS)
+    })
   }
 }

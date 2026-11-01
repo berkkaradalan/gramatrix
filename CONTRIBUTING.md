@@ -33,11 +33,11 @@ npm run dist:mac
 npm run dist:linux
 ```
 
-Installers are written to `dist/`. To try a Mac build the way a user gets it, run it through the
-install script:
+Installers are written to `dist/`. To build the current checkout and install it on a Mac the way a
+user gets it, run this in the repository root. It needs no release:
 
 ```sh
-GRAMATRIX_ZIP=dist/Gramatrix-mac-arm64.zip bash website/public/install.sh
+./install.sh
 ```
 
 ## Continuous integration

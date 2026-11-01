@@ -8,10 +8,8 @@
 # from Launchpad, Spotlight or the Dock and never needs the terminal again. Running this script
 # again installs the latest version over the old one.
 #
-# To try a local build instead of the latest release:
-#
-#   npm run dist:mac
-#   GRAMATRIX_ZIP=dist/Gramatrix-mac-arm64.zip bash website/public/install.sh
+# To install from a clone of the repository instead of the latest release, run ./install.sh in its
+# root. That script builds the app and passes the result here through GRAMATRIX_ZIP.
 
 set -euo pipefail
 

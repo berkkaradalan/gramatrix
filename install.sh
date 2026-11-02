@@ -41,6 +41,14 @@ check_node() {
     fail "Building Gramatrix needs Node.js $MINIMUM_NODE_MAJOR or newer, and this computer has $major. Get it from $NODE_URL"
 }
 
+# The build takes minutes, so the password is asked first. Otherwise the prompt can time out while
+# nobody is watching. The install step that follows reuses this sudo session.
+authenticate() {
+  [ "$(id -u)" != '0' ] || return 0
+  say 'Installing needs your password. After this you can leave it running.'
+  sudo -v || fail 'The password was not entered, so nothing changed. Run this again.'
+}
+
 # Checks the hardware instead of `uname -m`, which reports x86_64 inside a Rosetta terminal.
 detect_mac_architecture() {
   if [ "$(sysctl -in hw.optional.arm64)" = '1' ]; then echo 'arm64'; else echo 'x64'; fi
@@ -67,6 +75,7 @@ main() {
 
   cd "$(dirname "$0")"
   check_node
+  if [ "$system" = 'Linux' ]; then authenticate; fi
   build_log=$(mktemp -t gramatrix-build.XXXXXX)
 
   say 'Building Gramatrix. The first build takes a few minutes...'

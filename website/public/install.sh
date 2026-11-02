@@ -124,6 +124,13 @@ run_as_root() {
   if [ "$(id -u)" = '0' ]; then "$@"; else sudo "$@"; fi
 }
 
+# Runs apart from the install, so a missed password prompt is not reported as an apt failure and
+# leaves a running Gramatrix open.
+authenticate() {
+  say 'Installing needs your password.'
+  run_as_root true || fail 'The password was not entered, so nothing changed. Run this again.'
+}
+
 check_linux_system() {
   command -v apt-get >/dev/null ||
     fail 'On Linux, Gramatrix installs on Debian, Ubuntu and systems based on them.'
@@ -154,8 +161,9 @@ install_on_linux() {
     package=$(download_release "$LINUX_PACKAGE")
   fi
 
+  authenticate
   quit_running_app 'gramatrix' pkill -x 'gramatrix'
-  say 'Installing. Your password may be needed for this step...'
+  say 'Installing...'
   # With `curl | bash`, stdin is this script, so apt must not read from it.
   run_as_root apt-get install -y "$package" </dev/null ||
     fail 'apt could not install Gramatrix. See the messages above.'

@@ -49,7 +49,7 @@ const FAKE_COMMANDS: Record<string, string> = {
   osascript: 'exit 0',
   id: 'echo "${FAKE_UID:-1000}"',
   dpkg: 'echo "${FAKE_DEB_ARCH:-amd64}"',
-  sudo: '"$@"',
+  sudo: '[ -z "${FAKE_SUDO_FAILS:-}" ] && "$@"',
   'apt-get': `
     [ -z "\${FAKE_APT_FAILS:-}" ] || exit 100
     cp "$3" "$FAKE_LOG.installed"`,
@@ -248,6 +248,18 @@ describe('install.sh', () => {
       expect(status).toBe(1)
       expect(output).toContain('damaged or incomplete')
       expect(calls()).not.toContain('apt-get')
+    })
+
+    it('changes nothing when the password step fails', () => {
+      publishRelease('gramatrix-linux-amd64.deb')
+
+      const { status, output } = install({ ...LINUX, FAKE_SUDO_FAILS: '1' })
+
+      expect(status).toBe(1)
+      expect(output).toContain('The password was not entered')
+      expect(output).not.toContain('apt could not install')
+      expect(calls()).not.toContain('apt-get')
+      expect(calls()).not.toContain('pgrep')
     })
 
     it('reports when apt fails', () => {

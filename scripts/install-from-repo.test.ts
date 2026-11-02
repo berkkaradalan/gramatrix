@@ -32,9 +32,11 @@ const FAKE_COMMANDS: Record<string, string> = {
   pgrep: 'exit 1',
   open: 'exit 0',
   osascript: 'exit 0',
-  id: 'echo 1000',
+  id: 'echo "${FAKE_UID:-1000}"',
   dpkg: 'echo amd64',
-  sudo: '"$@"',
+  sudo: `
+    [ -z "\${FAKE_SUDO_FAILS:-}" ] || exit 1
+    [ "$1" = '-v' ] || "$@"`,
   'apt-get': 'cp "$3" "$FAKE_LOG.installed"',
   setsid: 'exit 0'
 }
@@ -116,6 +118,25 @@ describe('install.sh in the repository root', () => {
     expect(calls()).toContain('npx electron-builder --linux deb --x64 --publish never')
     expect(readFileSync(`${log}.installed`, 'utf8')).toContain('built deb')
     expect(output).toContain('applications menu')
+  })
+
+  it('asks for the password before the long build on Linux', () => {
+    expect(install({ FAKE_OS: 'Linux' }).status).toBe(0)
+    expect(calls().indexOf('sudo -v')).toBeGreaterThanOrEqual(0)
+    expect(calls().indexOf('sudo -v')).toBeLessThan(calls().indexOf('npm ci'))
+  })
+
+  it('does not build when the password step fails', () => {
+    const { status, output } = install({ FAKE_OS: 'Linux', FAKE_SUDO_FAILS: '1' })
+
+    expect(status).toBe(1)
+    expect(output).toContain('The password was not entered')
+    expect(calls()).not.toContain('npm')
+  })
+
+  it('does not ask root for a password', () => {
+    expect(install({ FAKE_OS: 'Linux', FAKE_UID: '0' }).status).toBe(0)
+    expect(calls()).not.toContain('sudo')
   })
 
   it('stops before building on a Linux without apt', () => {

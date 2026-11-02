@@ -1,10 +1,19 @@
-# Gramatrix
+<p align="center">
+  <img src="website/public/logo.svg" width="96" height="96" alt="Gramatrix logo">
+</p>
 
-[![CI](https://github.com/berkkaradalan/gramatrix/actions/workflows/ci.yml/badge.svg)](https://github.com/berkkaradalan/gramatrix/actions/workflows/ci.yml)
+<h1 align="center">Gramatrix</h1>
 
-A desktop AI coding agent for macOS and Linux. Bring your own API key, open a project, and work
-with an agent that can read code, edit files and run commands, with you in control of what it
-may do.
+<p align="center">A desktop coding agent that runs on your own keys.</p>
+
+<p align="center">
+  <a href="https://gramatrix.com">Website</a> &middot;
+  <a href="https://gramatrix.com/docs/">Docs</a> &middot;
+  <a href="https://github.com/berkkaradalan/gramatrix/actions/workflows/ci.yml"><img src="https://github.com/berkkaradalan/gramatrix/actions/workflows/ci.yml/badge.svg" alt="CI" align="center"></a>
+</p>
+
+Open a project and work with an agent that reads code, edits files and runs commands, with you in
+control of what it may do. Gramatrix runs on macOS and Linux.
 
 ## Features
 

@@ -1,6 +1,7 @@
 import * as RadixDialog from '@radix-ui/react-dialog'
 import { Command } from 'cmdk'
 import {
+  Bot,
   CalendarClock,
   ChartNoAxesColumn,
   Folder,
@@ -45,6 +46,7 @@ export function CommandPalette({
 
   const commands = [
     { label: 'New chat', icon: SquarePen, action: () => newChat(null) },
+    { label: 'Bots', icon: Bot, action: () => navigate({ view: 'bots' }) },
     { label: 'Scheduled', icon: CalendarClock, action: () => navigate({ view: 'scheduled' }) },
     { label: 'Channels', icon: MessagesSquare, action: () => navigate({ view: 'channels' }) },
     { label: 'Usage', icon: ChartNoAxesColumn, action: () => navigate({ view: 'usage' }) },

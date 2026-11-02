@@ -834,3 +834,210 @@
 .about dd {
   margin: 0;
 }
+
+/* Bots */
+
+.bot-avatar {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background: var(--surface-active);
+  border: 1px solid var(--border-strong);
+  border-radius: 50%;
+  color: var(--text);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  line-height: 1;
+}
+
+.bot-avatar-small {
+  width: 18px;
+  height: 18px;
+  font-size: 10px;
+}
+
+.bot-avatar-large {
+  width: 44px;
+  height: 44px;
+  font-size: var(--text-lg);
+}
+
+.bot-row-open {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: var(--space-3);
+  min-width: 0;
+  padding: var(--space-1);
+  margin: calc(var(--space-1) * -1);
+  background: none;
+  border: none;
+  border-radius: var(--radius-sm);
+  text-align: left;
+  cursor: pointer;
+}
+
+.bot-row-open:hover .bot-row-name {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.bot-row-name,
+.bot-row-soul {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.bot-row-name {
+  font-weight: 500;
+}
+
+.bot-row-soul {
+  font-size: var(--text-sm);
+}
+
+.back-link {
+  align-self: flex-start;
+  margin-bottom: calc(var(--space-2) * -1);
+}
+
+.bot-title {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+.bot-title h1 {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.soul {
+  max-height: 240px;
+  overflow-y: auto;
+  padding: var(--space-3) var(--space-4);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.soul-empty {
+  color: var(--muted);
+}
+
+.bot-setting {
+  padding: var(--space-3) var(--space-4);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+}
+
+.memory-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+}
+
+.memory-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+
+.memory-head p {
+  margin-top: 2px;
+}
+
+.memory-count {
+  flex: none;
+  color: var(--muted);
+  font-size: var(--text-sm);
+  font-variant-numeric: tabular-nums;
+}
+
+.memory-meter {
+  height: 4px;
+  overflow: hidden;
+  background: var(--surface-active);
+  border-radius: var(--radius-full);
+}
+
+.memory-meter span {
+  display: block;
+  height: 100%;
+  background: var(--accent);
+  border-radius: var(--radius-full);
+  transition: width var(--transition);
+}
+
+.memory-meter-high span {
+  background: var(--warning);
+}
+
+.memory-empty {
+  font-size: var(--text-sm);
+}
+
+.memory-list {
+  display: flex;
+  flex-direction: column;
+  border-top: 1px solid var(--border);
+}
+
+.memory-entry {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  padding: var(--space-2) 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.memory-entry > .memory-editor {
+  flex: 1;
+}
+
+.memory-text {
+  flex: 1;
+  min-width: 0;
+  padding-top: 2px;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+/* Like the sidebar, actions stay out of the way until the row is hovered or focused. */
+.memory-actions {
+  display: flex;
+  flex: none;
+  gap: 2px;
+  opacity: 0;
+  transition: opacity var(--transition);
+}
+
+.memory-entry:hover .memory-actions,
+.memory-entry:focus-within .memory-actions {
+  opacity: 1;
+}
+
+.memory-editor {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.memory-over {
+  color: var(--danger);
+}

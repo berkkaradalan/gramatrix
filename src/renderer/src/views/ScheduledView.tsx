@@ -7,11 +7,13 @@ import {
   Pencil,
   Play,
   Plus,
+  Sparkles,
   Trash2
 } from 'lucide-react'
 import { useEffect, useState, type ReactNode } from 'react'
 import type { JobInput } from '@shared/rpc'
 import type { Job, JobRun, JobRunStatus, ModelRef, PermissionMode } from '@shared/types'
+import { BotAvatar } from '../components/BotChip'
 import { ModelPicker } from '../components/ModelPicker'
 import { PermissionControl } from '../components/PermissionControl'
 import { addProjectFromDialog } from '../components/ProjectChip'
@@ -45,6 +47,9 @@ import { useNavigation } from '../state/navigation'
 import { useOverlays } from '../state/overlays'
 import { toast } from '../state/toasts'
 
+/** Select value for plain Gramatrix. Bot ids are UUIDs, so they never collide with it. */
+const NO_BOT = 'gramatrix'
+
 const RUN_STATUS: Record<JobRunStatus, { tone: 'busy' | 'ok' | 'error' | 'off'; label: string }> = {
   running: { tone: 'busy', label: 'Running' },
   succeeded: { tone: 'ok', label: 'Succeeded' },
@@ -61,7 +66,7 @@ function JobDialog({
   job: Job | null
   onOpenChange(open: boolean): void
 }): ReactNode {
-  const { projects, settings, providers } = useApp()
+  const { projects, settings, providers, bots } = useApp()
   const [name, setName] = useState('')
   const [prompt, setPrompt] = useState('')
   const [projectId, setProjectId] = useState('')
@@ -69,6 +74,7 @@ function JobDialog({
   const [model, setModel] = useState<ModelRef | null>(null)
   const [permissionMode, setPermissionMode] = useState<PermissionMode>('read-only')
   const [catchUp, setCatchUp] = useState(false)
+  const [botId, setBotId] = useState<string | null>(null)
   const { busy, run } = useAction()
 
   useEffect(() => {
@@ -80,6 +86,7 @@ function JobDialog({
     setModel(job?.model ?? resolveDefaultModel(settings, providers))
     setPermissionMode(job?.permissionMode ?? 'read-only')
     setCatchUp(job?.catchUp ?? false)
+    setBotId(job?.botId ?? null)
     // Only opening resets the form. Later changes to settings must not wipe what was typed.
   }, [open, job])
 
@@ -98,6 +105,7 @@ function JobDialog({
       model,
       permissionMode,
       catchUp,
+      botId,
       enabled: job?.enabled ?? true
     }
     void run(async () => {
@@ -106,6 +114,13 @@ function JobDialog({
       toast.success(job ? 'Job saved.' : 'Job created.')
       onOpenChange(false)
     })
+  }
+
+  // Like a new chat, picking a bot also picks its model. The model can still be changed after.
+  const chooseBot = (value: string): void => {
+    const bot = bots.find(({ id }) => id === value)
+    setBotId(bot?.id ?? null)
+    if (bot) setModel(bot.model)
   }
 
   return (
@@ -141,21 +156,45 @@ function JobDialog({
             />
           )}
         </Field>
-        <Field label="Project" hint="Jobs always run inside a project folder.">
-          {(id) => (
-            <Select
-              id={id}
-              value={projectId}
-              placeholder="Choose a project"
-              options={projects.map((project) => ({
-                value: project.id,
-                label: project.name,
-                hint: project.path
-              }))}
-              onChange={setProjectId}
-            />
-          )}
-        </Field>
+        <div className="grid-two">
+          <Field label="Project" hint="Jobs always run inside a project folder.">
+            {(id) => (
+              <Select
+                id={id}
+                value={projectId}
+                placeholder="Choose a project"
+                options={projects.map((project) => ({
+                  value: project.id,
+                  label: project.name,
+                  hint: project.path
+                }))}
+                onChange={setProjectId}
+              />
+            )}
+          </Field>
+          <Field label="Bot" hint="A bot runs the job with its soul and memory.">
+            {(id) => (
+              <Select
+                id={id}
+                value={botId ?? NO_BOT}
+                options={[
+                  {
+                    value: NO_BOT,
+                    label: 'Gramatrix',
+                    hint: 'No bot, no memory',
+                    icon: <Sparkles size={15} aria-hidden />
+                  },
+                  ...bots.map((bot) => ({
+                    value: bot.id,
+                    label: bot.name,
+                    icon: <BotAvatar name={bot.name} size="small" />
+                  }))
+                ]}
+                onChange={chooseBot}
+              />
+            )}
+          </Field>
+        </div>
         <ScheduleBuilder draft={schedule} onChange={setSchedule} />
         <div className="grid-two">
           <Field label="Model">
@@ -231,11 +270,12 @@ function RunHistory({ job }: { job: Job }): ReactNode {
 }
 
 function JobRow({ job, onEdit }: { job: Job; onEdit(): void }): ReactNode {
-  const { projects } = useApp()
+  const { projects, bots } = useApp()
   const { confirm } = useOverlays()
   const [showHistory, setShowHistory] = useState(false)
   const { busy, run } = useAction()
   const project = projects.find(({ id }) => id === job.projectId)
+  const bot = bots.find(({ id }) => id === job.botId)
 
   const toggle = (enabled: boolean): Promise<unknown> =>
     run(() => invoke('jobs.update', { id: job.id, patch: { enabled } }))
@@ -273,6 +313,12 @@ function JobRow({ job, onEdit }: { job: Job; onEdit(): void }): ReactNode {
             )}
           </p>
         </div>
+        {bot && (
+          <span className="project-tag">
+            <BotAvatar name={bot.name} size="small" />
+            {bot.name}
+          </span>
+        )}
         <span className="project-tag">
           <FolderOpen size={13} aria-hidden />
           {project?.name ?? 'Unknown project'}
@@ -314,6 +360,8 @@ export function ScheduledView(): ReactNode {
   const jobs = useQuery(() => invoke('jobs.list', undefined), [])
   const [dialog, setDialog] = useState<{ job: Job | null } | null>(null)
   useHostEvent('jobs.changed', () => void jobs.reload())
+  // Deleting a bot turns its jobs back into plain Gramatrix without a jobs event.
+  useHostEvent('bots.changed', () => void jobs.reload())
 
   const hasProjects = projects.length > 0
   const list = jobs.data ?? []

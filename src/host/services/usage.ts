@@ -23,7 +23,8 @@ const SOURCE_LABELS: Record<UsageSource, string> = {
   chat: 'Chats',
   job: 'Scheduled jobs',
   channel: 'Channels',
-  subagent: 'Subagents'
+  subagent: 'Subagents',
+  memory: 'Bot memory'
 }
 
 /** What usage needs from a finished model call. */

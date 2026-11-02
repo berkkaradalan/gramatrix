@@ -1,7 +1,8 @@
-import { Hash, Send, Settings2, Trash2, type LucideIcon } from 'lucide-react'
+import { Hash, Send, Settings2, Sparkles, Trash2, type LucideIcon } from 'lucide-react'
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { secretName } from '@shared/rpc'
 import { CHANNEL_KINDS, type Channel, type ChannelKind, type ChannelState } from '@shared/types'
+import { BotAvatar } from '../components/BotChip'
 import { ModelPicker } from '../components/ModelPicker'
 import { PermissionControl } from '../components/PermissionControl'
 import {
@@ -71,6 +72,8 @@ const STATE_TONE: Record<ChannelState, 'off' | 'busy' | 'ok' | 'error'> = {
 }
 
 const NO_PROJECT = 'none'
+/** Select value for plain Gramatrix. Bot ids are UUIDs, so they never collide with it. */
+const NO_BOT = 'gramatrix'
 
 function Step({
   number,
@@ -229,7 +232,7 @@ function SetupDialog({
   open: boolean
   onOpenChange(open: boolean): void
 }): ReactNode {
-  const { projects } = useApp()
+  const { projects, bots } = useApp()
   const { run } = useAction()
   const guide = GUIDES[channel.kind]
 
@@ -241,9 +244,16 @@ function SetupDialog({
         enabled: next.enabled,
         projectId: next.projectId,
         model: next.model,
-        permissionMode: next.permissionMode
+        permissionMode: next.permissionMode,
+        botId: next.botId
       })
     )
+  }
+
+  // Like a new chat, picking a bot also picks its model. The model can still be changed after.
+  const chooseBot = (value: string): Promise<unknown> => {
+    const bot = bots.find(({ id }) => id === value)
+    return configure(bot ? { botId: bot.id, model: bot.model } : { botId: null })
   }
 
   return (
@@ -261,6 +271,31 @@ function SetupDialog({
           ))}
         </Step>
         <Step number={2} title="Choose how it works">
+          <Field
+            label="Bot"
+            hint="A bot uses its memory only in direct messages with you, never in groups or channels."
+          >
+            {(id) => (
+              <Select
+                id={id}
+                value={channel.botId ?? NO_BOT}
+                options={[
+                  {
+                    value: NO_BOT,
+                    label: 'Gramatrix',
+                    hint: 'No bot, no memory',
+                    icon: <Sparkles size={15} aria-hidden />
+                  },
+                  ...bots.map((bot) => ({
+                    value: bot.id,
+                    label: bot.name,
+                    icon: <BotAvatar name={bot.name} size="small" />
+                  }))
+                ]}
+                onChange={(value) => void chooseBot(value)}
+              />
+            )}
+          </Field>
           <div className="grid-two">
             <Field label="Project">
               {(id) => (
@@ -331,8 +366,9 @@ function ChannelCard({ channel }: { channel: Channel }): ReactNode {
   const [open, setOpen] = useState(false)
   const guide = GUIDES[channel.kind]
   const Icon = guide.icon
-  const { projects } = useApp()
+  const { projects, bots } = useApp()
   const project = projects.find(({ id }) => id === channel.projectId)
+  const bot = bots.find(({ id }) => id === channel.botId)
 
   return (
     <article className="channel-card">
@@ -359,7 +395,9 @@ function ChannelCard({ channel }: { channel: Channel }): ReactNode {
       </div>
       {channel.error && <Banner tone="error">{channel.error}</Banner>}
       <p className="hint channel-card-where">
-        {channel.enabled ? `Works in ${project?.name ?? 'plain conversation'}` : 'Not set up yet'}
+        {channel.enabled
+          ? `${bot ? `${bot.name} answers` : 'Works'} in ${project?.name ?? 'plain conversation'}`
+          : 'Not set up yet'}
       </p>
       <Button icon={channel.enabled ? Settings2 : undefined} onClick={() => setOpen(true)}>
         {channel.enabled ? 'Manage' : 'Set up'}
@@ -373,6 +411,8 @@ export function ChannelsView(): ReactNode {
   const channels = useQuery(() => invoke('channels.list', undefined), [])
   const [live, setLive] = useState<Channel[] | null>(null)
   useHostEvent('channels.changed', setLive)
+  // Deleting a bot turns its channels back into plain Gramatrix without a channel event.
+  useHostEvent('bots.changed', () => void channels.reload())
   useEffect(() => setLive(null), [channels.data])
 
   const list = live ?? channels.data ?? []

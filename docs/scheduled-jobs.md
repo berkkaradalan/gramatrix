@@ -10,6 +10,7 @@ chat titled `Job: <name>`, so you can read what happened afterwards.
 | Name            | Label shown in the job list.                                            |
 | Schedule        | Five field cron in local time: minute, hour, day, month, weekday.       |
 | Prompt          | The message sent to the agent.                                          |
+| Bot             | Plain Gramatrix, or a bot that runs the job. See below.                 |
 | Model           | The model to use.                                                       |
 | Permission mode | What the run may do. See below.                                         |
 | Catch up        | Run once on launch if a scheduled time passed while the app was closed. |
@@ -26,6 +27,13 @@ however many times were passed:
 - With **catch up** off, the history shows a `missed` entry.
 
 Time a job spent disabled never counts as missed.
+
+## Running as a bot
+
+Pick a [bot](bots.md) under **Bot** to run the job with its name, soul and memory. Picking a bot
+also picks its model, which you can change again. Each run chat is a chat with that bot. Nobody
+else reads a job, so the bot gets its memory and its `memory` tool in every run, the same as in a
+chat in the app. Deleting the bot turns the job back into plain Gramatrix.
 
 ## Permissions
 
@@ -49,6 +57,8 @@ Removing a project deletes its jobs, stops their timers and cancels any run in p
 - `jobs.scheduled_from` is the moment the current schedule took effect. Start-up compares the next
   fire time after the latest of that value, the last run and the latest history row to the clock.
 - Runs left in `running` by a crash are marked `failed` on the next start.
+- `jobs.bot_id` links the bot and is cleared when the bot is deleted. Runs pass `withMemory: true`
+  to `runHeadless`, because only the user reads a job's chat.
 - The database cascade cannot see timers, so call `handleProjectRemoved` before deleting a project.
   A tick for a job that no longer exists disarms itself instead of throwing, because croner would
   report a throw as an unhandled rejection.

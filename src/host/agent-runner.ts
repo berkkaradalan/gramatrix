@@ -7,7 +7,14 @@ export interface HeadlessRunInput {
   permissionMode?: PermissionMode
   signal?: AbortSignal
   /** What the model calls of this run count as in usage reports. */
-  source: Exclude<UsageSource, 'chat' | 'subagent'>
+  source: Exclude<UsageSource, 'chat' | 'subagent' | 'memory'>
+  /**
+   * Lets a bot read and change its memory during the run. Memory holds personal facts about the
+   * user, so set this only when nobody but the user can read the conversation, such as a direct
+   * message with the paired person or a scheduled job. Off by default, so a new caller cannot leak
+   * memory by accident. The bot's soul applies either way.
+   */
+  withMemory?: boolean
 }
 
 export interface HeadlessRunResult {

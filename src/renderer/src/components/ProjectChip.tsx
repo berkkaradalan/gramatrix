@@ -22,13 +22,18 @@ export async function addProjectFromDialog(
   }
 }
 
-/** Chooses where a new chat works. Defaults to no project. */
+/** Chooses where a chat works. Defaults to no project. */
 export function ProjectChip({
   projectId,
-  onChange
+  onChange,
+  className = 'chip',
+  disabled = false
 }: {
   projectId: string | null
   onChange(projectId: string | null): void
+  className?: string
+  /** Set while a reply is running, which keeps the folder it started with. */
+  disabled?: boolean
 }): ReactNode {
   const { projects, reloadProjects } = useApp()
   const project = projects.find(({ id }) => id === projectId)
@@ -39,8 +44,10 @@ export function ProjectChip({
       <RadixMenu.Trigger asChild>
         <button
           type="button"
-          className="chip"
+          className={className}
+          title={project?.path ?? 'Choose a project folder to give this chat file access'}
           aria-label={`Project: ${project?.name ?? 'No project'}`}
+          disabled={disabled}
         >
           <Icon size={14} aria-hidden />
           <span className="chip-label">{project?.name ?? 'No project'}</span>

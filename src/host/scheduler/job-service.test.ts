@@ -69,6 +69,7 @@ function setup(): Fixture {
       permissionMode: 'read-only',
       enabled: true,
       catchUp: false,
+      botId: null,
       ...overrides
     })
   }
@@ -290,5 +291,68 @@ describe('JobService', () => {
     jobs.start()
     void jobs.stop()
     expect(spy).not.toHaveBeenCalled()
+  })
+})
+
+describe('JobService with a bot', () => {
+  function withBot() {
+    const fixture = setup()
+    const bot = fixture.host.services.bots.create({
+      name: 'Ada',
+      soul: '',
+      model: { provider: 'openai', model: 'test' },
+      learns: false
+    })
+    return { ...fixture, bot }
+  }
+
+  it('runs plain Gramatrix by default', async () => {
+    const { jobs, input, runner, host } = setup()
+    const job = jobs.create(input())
+    jobs.runNow(job.id)
+    await jobs.settled()
+    expect(job.botId).toBeNull()
+    expect(host.services.chats.get(runner.calls[0]!.chatId).botId).toBeNull()
+  })
+
+  it('gives each run chat the bot and keeps its memory, since nobody else reads it', async () => {
+    const { jobs, input, runner, host, bot } = withBot()
+    const job = jobs.create(input({ botId: bot.id }))
+    jobs.runNow(job.id)
+    await jobs.settled()
+    expect(jobs.get(job.id).botId).toBe(bot.id)
+    expect(host.services.chats.get(runner.calls[0]!.chatId).botId).toBe(bot.id)
+    expect(runner.calls[0]?.withMemory).toBe(true)
+  })
+
+  it('changes or clears the bot on update', () => {
+    const { jobs, input, bot } = withBot()
+    const job = jobs.create(input())
+    expect(jobs.update(job.id, { botId: bot.id }).botId).toBe(bot.id)
+    expect(jobs.update(job.id, { name: 'Weekly' }).botId).toBe(bot.id)
+    expect(jobs.update(job.id, { botId: null }).botId).toBeNull()
+  })
+
+  it('refuses a bot that does not exist', () => {
+    const { jobs, input } = setup()
+    expect(() => jobs.create(input({ botId: 'gone' }))).toThrow('That bot no longer exists')
+  })
+
+  it('goes back to plain Gramatrix when its bot is deleted', async () => {
+    const { jobs, input, runner, host, bot } = withBot()
+    const job = jobs.create(input({ botId: bot.id }))
+    host.services.bots.remove(bot.id)
+    expect(jobs.get(job.id).botId).toBeNull()
+    jobs.runNow(job.id)
+    await jobs.settled()
+    expect(jobs.runs(job.id)[0]?.status).toBe('succeeded')
+    expect(host.services.chats.get(runner.calls[0]!.chatId).botId).toBeNull()
+  })
+
+  it('treats a missing bot id from an older caller as plain Gramatrix', () => {
+    const { jobs, input } = setup()
+    const legacy: Partial<JobInput> = input()
+    delete legacy.botId
+    expect(jobs.create(legacy as JobInput).botId).toBeNull()
   })
 })

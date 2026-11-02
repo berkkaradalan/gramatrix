@@ -203,7 +203,8 @@ describe('general chats', () => {
     const call = model.doStreamCalls[0]
     expect(call?.tools ?? []).toEqual([])
     expect(JSON.stringify(call?.prompt)).toContain('no tools')
-    expect(JSON.stringify(call?.prompt)).toContain('open a project')
+    expect(JSON.stringify(call?.prompt)).toContain('choose a project folder')
+    expect(JSON.stringify(call?.prompt)).toContain('No project')
   })
 
   it('never reaches a tool, even if the model asks for one', async () => {

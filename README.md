@@ -14,6 +14,7 @@ may do.
   work on your code.
 - **Permission modes:** from read-only to full access, with inline approvals.
 - **Subagents:** the model can delegate focused work to agents it creates.
+- **Bots:** agents with their own name, personality and a memory that lasts between chats.
 - **Scheduled jobs:** run prompts on a cron schedule while the app is running.
 - **Chat channels:** talk to your agent from Telegram or Slack after pairing your account.
 - **No repeated password prompts:** keys are encrypted with your operating system keychain.
@@ -53,6 +54,7 @@ the permission mode at **Ask first** unless you trust the task. See
 - [User guide](docs/user-guide.md)
 - [Architecture](docs/architecture.md)
 - [Agent and permissions](docs/agent.md)
+- [Bots](docs/bots.md)
 - [Providers](docs/providers.md)
 - [Scheduled jobs](docs/scheduled-jobs.md)
 - [Chat channels](docs/channels.md)

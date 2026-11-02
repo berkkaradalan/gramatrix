@@ -1,6 +1,19 @@
-import { Bot, Brain, Check, ChevronRight, LoaderCircle, Slash, X } from 'lucide-react'
+import {
+  Bot,
+  BookmarkCheck,
+  BookmarkMinus,
+  BookmarkPlus,
+  BookmarkX,
+  Brain,
+  Check,
+  ChevronRight,
+  LoaderCircle,
+  Slash,
+  X
+} from 'lucide-react'
 import type { ReactNode } from 'react'
 import type { MessagePart, ToolCallPart, ToolCallState } from '@shared/types'
+import { describeMemoryCall, MEMORY_TOOL_NAME } from '../../lib/bots'
 import { formatJson } from '../../lib/format'
 import { languageFromPath } from '../../lib/languages'
 import {
@@ -53,7 +66,43 @@ function ToolDetails({ part }: { part: ToolCallPart }): ReactNode {
   )
 }
 
+/** A change a bot made to its memory, shown as plain words instead of a raw tool call. */
+function MemoryCall({ part }: { part: ToolCallPart }): ReactNode {
+  const view = describeMemoryCall(part)
+  const action = (part.input as { action?: unknown } | null)?.action
+  const Icon = view.failed
+    ? BookmarkX
+    : action === 'remove'
+      ? BookmarkMinus
+      : action === 'replace'
+        ? BookmarkCheck
+        : BookmarkPlus
+  return (
+    <div className={view.failed ? 'memory-call memory-call-failed' : 'memory-call'}>
+      <div className="memory-call-head">
+        <Icon size={14} aria-hidden />
+        <span className="tool-label">{view.label}</span>
+        {view.kindLabel && <span className="memory-call-kind">{view.kindLabel}</span>}
+        <span className="spacer" />
+        <StateIcon state={view.failed ? 'failed' : part.state} />
+      </div>
+      {(view.previous || view.content) && (
+        <div className="memory-call-body">
+          {view.previous && <p className="memory-call-previous">{view.previous}</p>}
+          {view.content && (
+            <p className={action === 'remove' ? 'memory-call-previous' : undefined}>
+              {view.content}
+            </p>
+          )}
+        </div>
+      )}
+      {view.error && <p className="memory-call-error">{view.error}</p>}
+    </div>
+  )
+}
+
 function ToolCall({ part }: { part: ToolCallPart }): ReactNode {
+  if (part.toolName === MEMORY_TOOL_NAME) return <MemoryCall part={part} />
   const { icon: Icon, label } = toolMeta(part.toolName)
   return (
     <details className="tool">

@@ -260,6 +260,27 @@
   white-space: nowrap;
 }
 
+/* The bot a chat talks to, before its title. */
+.side-bot {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 3px;
+  max-width: 45%;
+  height: 18px;
+  padding: 0 var(--space-1);
+  background: var(--surface-hover);
+  border-radius: 4px;
+  color: var(--muted);
+  font-size: var(--text-xs);
+}
+
+.side-bot-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .side-age {
   flex: none;
   color: var(--faint);

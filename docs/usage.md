@@ -7,12 +7,16 @@ model, project and source. The data stays on your computer in `gramatrix.db`.
 
 `usage_events` has one row per model call. An agent turn with three tool rounds makes four rows.
 
-| Source     | Meaning                                  |
-| ---------- | ---------------------------------------- |
-| `chat`     | A chat in the app.                       |
-| `job`      | A scheduled job.                         |
-| `channel`  | A Telegram or Slack conversation.        |
-| `subagent` | A subagent, whatever started its parent. |
+| Source     | Meaning                                                           |
+| ---------- | ----------------------------------------------------------------- |
+| `chat`     | A chat in the app.                                                |
+| `job`      | A scheduled job.                                                  |
+| `channel`  | A Telegram or Slack conversation.                                 |
+| `subagent` | A subagent, whatever started its parent.                          |
+| `memory`   | A bot reviewing a chat to update its memory. Shown as Bot memory. |
+
+A `memory` row belongs to the chat that was reviewed and uses the model of that chat, so turning
+off learning for a bot is how to stop this cost. See [memory review](agent.md#memory-review).
 
 Rows are written from the SDK callback `onLanguageModelCallEnd`, not from `finish-step`, because
 `finish-step` waits for tools. A run cancelled during a long command still counts the call that

@@ -8,7 +8,11 @@ export interface InboundMessage {
   userId: string
   displayName: string
   text: string
-  /** True for a private conversation between the sender and the bot. */
+  /**
+   * True only when the platform confirms a private conversation between the sender and the bot.
+   * Anything else, including a conversation of unknown type, is false and treated as shared:
+   * pairing codes are refused there and a bot does not use its memory.
+   */
   isDirect: boolean
   /** True when the sender is another bot. Bots are always ignored. */
   isBot: boolean

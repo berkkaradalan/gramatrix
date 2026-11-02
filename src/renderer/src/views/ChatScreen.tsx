@@ -1,19 +1,24 @@
-import { Ellipsis, FolderOpen, MessageCircle, Pencil, Plug, Trash2 } from 'lucide-react'
+import { Ellipsis, Pencil, Plug, Trash2 } from 'lucide-react'
 import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react'
 import type { Chat, ChatMessage, ModelRef, PermissionMode } from '@shared/types'
+import { BotAvatar } from '../components/BotChip'
 import { ApprovalCard } from '../components/chat/ApprovalCard'
 import { MessageParts } from '../components/chat/MessageParts'
 import { Composer } from '../components/Composer'
 import { ChatUsage } from '../components/usage/ChatUsage'
 import { ModelPicker } from '../components/ModelPicker'
 import { PermissionControl } from '../components/PermissionControl'
+import { ProjectChip } from '../components/ProjectChip'
 import { Banner, Button, CopyButton, IconButton, Menu, Skeleton } from '../components/ui'
+import { errorMessage } from '../lib/format'
 import { isTerminal } from '../lib/run-reducer'
 import { useChatActions } from './chat-actions'
 import { useApp } from '../state/app-context'
 import { invoke, useAction, useQuery } from '../state/hooks'
+import { useNavigation } from '../state/navigation'
 import { useOverlays } from '../state/overlays'
 import { runStore, useRun } from '../state/run-store'
+import { toast } from '../state/toasts'
 
 /** Distance from the bottom that still counts as following the conversation. */
 const FOLLOW_THRESHOLD_PX = 80
@@ -22,19 +27,40 @@ function messageText(message: ChatMessage): string {
   return message.parts.flatMap((part) => (part.type === 'text' ? [part.text] : [])).join('\n\n')
 }
 
-function ChatHeader({ chat }: { chat: Chat }): ReactNode {
-  const { projects } = useApp()
-  const project = projects.find(({ id }) => id === chat.projectId)
+function ChatHeader({ chat, running }: { chat: Chat; running: boolean }): ReactNode {
+  const { bots } = useApp()
+  const { navigate } = useNavigation()
+  const bot = chat.botId ? bots.find(({ id }) => id === chat.botId) : undefined
   const { rename, remove, dialog } = useChatActions(chat)
-  const ProjectIcon = project ? FolderOpen : MessageCircle
+
+  const moveToProject = (projectId: string | null): void => {
+    if (projectId === chat.projectId) return
+    invoke('chats.update', { id: chat.id, projectId }).catch((error: unknown) =>
+      toast.error(errorMessage(error))
+    )
+  }
 
   return (
     <header className="chat-header">
       <h1 title={chat.title}>{chat.title}</h1>
-      <span className="project-tag" title={project?.path}>
-        <ProjectIcon size={13} aria-hidden />
-        {project?.name ?? 'No project'}
-      </span>
+      {bot && (
+        <button
+          type="button"
+          className="project-tag bot-tag"
+          title={`Open ${bot.name} and its memory`}
+          aria-label={`Bot: ${bot.name}. Open its page`}
+          onClick={() => navigate({ view: 'bot', botId: bot.id })}
+        >
+          <BotAvatar name={bot.name} size="small" />
+          {bot.name}
+        </button>
+      )}
+      <ProjectChip
+        projectId={chat.projectId}
+        onChange={moveToProject}
+        className="project-tag project-tag-button"
+        disabled={running}
+      />
       <span className="spacer" />
       <ChatUsage chatId={chat.id} />
       <Menu
@@ -67,7 +93,8 @@ function MessageView({ message }: { message: ChatMessage }): ReactNode {
 }
 
 export function ChatScreen({ chat }: { chat: Chat }): ReactNode {
-  const { providers, rememberModel } = useApp()
+  const { providers, bots, rememberModel } = useApp()
+  const bot = chat.botId ? bots.find(({ id }) => id === chat.botId) : undefined
   const { openProviders } = useOverlays()
   const run = useRun(chat.id)
   const messages = useQuery(() => invoke('chats.messages', { chatId: chat.id }), [chat.id])
@@ -129,7 +156,7 @@ export function ChatScreen({ chat }: { chat: Chat }): ReactNode {
 
   return (
     <div className="chat">
-      <ChatHeader chat={chat} />
+      <ChatHeader chat={chat} running={running} />
 
       <div
         className="chat-scroll"
@@ -195,7 +222,7 @@ export function ChatScreen({ chat }: { chat: Chat }): ReactNode {
             onChange={setDraft}
             onSubmit={send}
             canSend={Boolean(draft.trim())}
-            placeholder="Reply"
+            placeholder={bot ? `Reply to ${bot.name}` : 'Reply'}
             autoFocus
             running={running}
             onStop={() => void act(() => invoke('agent.cancel', { chatId: chat.id }))}

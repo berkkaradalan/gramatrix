@@ -26,6 +26,7 @@ import type { AppInfo, AppSettings, ProviderId, TransparencySupport } from '@sha
 import { MEDIA_SCHEME, importVideo, videoResponse } from './background-videos'
 import { readOpencodeKey } from './opencode-keys'
 import { SecretStore } from './secret-store'
+import { trayIconBitmap } from './tray-icon'
 
 interface PendingRequest {
   resolve(value: unknown): void
@@ -44,6 +45,7 @@ const pendingRequests = new Map<number, PendingRequest>()
 let nextRequestId = 1
 let host: UtilityProcess | null = null
 let window: BrowserWindow | null = null
+const TRAY_ICON_SIZE = 16
 let tray: Tray | null = null
 let secrets: SecretStore
 let isQuitting = false
@@ -300,14 +302,21 @@ function showWindow(): void {
   }
 }
 
+// macOS tints a black template image to suit a light or dark menu bar. Linux panels are dark on
+// the common desktops, so the icon is white there.
+function trayImage(): Electron.NativeImage {
+  const isMac = process.platform === 'darwin'
+  const gray = isMac ? 0 : 255
+  const bitmap = (size: number): Electron.NativeImage =>
+    nativeImage.createFromBitmap(trayIconBitmap(size, gray), { width: size, height: size })
+  const image = bitmap(TRAY_ICON_SIZE)
+  image.addRepresentation({ scaleFactor: 2, buffer: bitmap(TRAY_ICON_SIZE * 2).toPNG() })
+  image.setTemplateImage(isMac)
+  return image
+}
+
 function createTray(): void {
-  // A small green square. It is generated here so the repository needs no icon asset yet.
-  const size = 16
-  const pixels = Buffer.alloc(size * size * 4)
-  for (let offset = 0; offset < pixels.length; offset += 4) {
-    pixels.set([0x41, 0xff, 0x00, 0xff], offset)
-  }
-  tray = new Tray(nativeImage.createFromBitmap(pixels, { width: size, height: size }))
+  tray = new Tray(trayImage())
   tray.setToolTip('Gramatrix')
   tray.setContextMenu(
     Menu.buildFromTemplate([

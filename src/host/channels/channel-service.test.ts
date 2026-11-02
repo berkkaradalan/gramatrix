@@ -105,6 +105,7 @@ function setup(): Fixture {
     projectId,
     model: { provider: 'openai', model: 'test' },
     permissionMode: 'read-only',
+    botId: null,
     ...overrides
   })
   return {
@@ -311,6 +312,17 @@ describe('ChannelService runs', () => {
     expect(chatOf('one')).toBe(chatOf('two'))
     expect(chatOf('three')).not.toBe(chatOf('one'))
     expect(host.services.chats.list(projectId)).toHaveLength(2)
+  })
+
+  it('remembers whether a thread is private, so the app keeps memory out of group chats', async () => {
+    const { connectPaired, adapter, runner, channels, host } = setup()
+    await connectPaired()
+    adapter.deliver({ text: 'in private' })
+    adapter.deliver({ text: 'in a group', threadId: 'group-thread', isDirect: false })
+    await channels.settled()
+    const chatOf = (text: string) => runner.calls.find((call) => call.text === text)?.chatId ?? ''
+    expect(host.services.chats.isPrivate(chatOf('in private'))).toBe(true)
+    expect(host.services.chats.isPrivate(chatOf('in a group'))).toBe(false)
   })
 
   it('handles messages in one thread in order and other threads independently', async () => {
@@ -545,5 +557,85 @@ describe('ChannelService connections', () => {
     expect(code).toHaveLength(8)
     await host.router.dispatch('channels.revokePairing', { kind: 'telegram', externalUserId: 'x' })
     expect(await host.router.dispatch('channels.pairings', { kind: 'telegram' })).toEqual([])
+  })
+})
+
+describe('ChannelService with a bot', () => {
+  async function withBot() {
+    const fixture = setup()
+    const bot = fixture.host.services.bots.create({
+      name: 'Ada',
+      soul: '',
+      model: { provider: 'openai', model: 'test' },
+      learns: false
+    })
+    await fixture.connectPaired()
+    fixture.channels.configure(fixture.config({ botId: bot.id }))
+    await fixture.channels.settled()
+    return { ...fixture, bot }
+  }
+
+  it('answers as plain Gramatrix by default', async () => {
+    const { connectPaired, adapter, runner, channels, host } = setup()
+    await connectPaired()
+    adapter.deliver()
+    await channels.settled()
+    expect(channels.list().map((channel) => channel.botId)).toEqual([null, null])
+    expect(host.services.chats.get(runner.calls[0]!.chatId).botId).toBeNull()
+  })
+
+  it('gives thread chats the bot and lets it use memory in a direct message', async () => {
+    const { adapter, runner, channels, host, bot } = await withBot()
+    adapter.deliver({ isDirect: true })
+    await channels.settled()
+    expect(channels.list()[0]?.botId).toBe(bot.id)
+    expect(host.services.chats.get(runner.calls[0]!.chatId).botId).toBe(bot.id)
+    expect(runner.calls[0]?.withMemory).toBe(true)
+  })
+
+  it('keeps memory out of a group, even for the paired person', async () => {
+    const { adapter, runner, channels, host, bot } = await withBot()
+    adapter.deliver({ isDirect: false, threadId: 'group-thread' })
+    await channels.settled()
+    expect(host.services.chats.get(runner.calls[0]!.chatId).botId).toBe(bot.id)
+    expect(runner.calls[0]?.withMemory).toBe(false)
+  })
+
+  it('moves a thread to a new chat when the channel changes bot', async () => {
+    const { adapter, runner, channels, config, host, bot } = await withBot()
+    adapter.deliver({ text: 'one' })
+    await channels.settled()
+    channels.configure(config({ botId: null }))
+    await channels.settled()
+    adapter.deliver({ text: 'two' })
+    await channels.settled()
+    expect(runner.calls[1]?.chatId).not.toBe(runner.calls[0]?.chatId)
+    expect(host.services.chats.get(runner.calls[0]!.chatId).botId).toBe(bot.id)
+    expect(host.services.chats.get(runner.calls[1]!.chatId).botId).toBeNull()
+  })
+
+  it('goes back to plain Gramatrix and keeps the thread chat when the bot is deleted', async () => {
+    const { adapter, runner, channels, host, bot } = await withBot()
+    adapter.deliver({ text: 'one' })
+    await channels.settled()
+    host.services.bots.remove(bot.id)
+    adapter.deliver({ text: 'two' })
+    await channels.settled()
+    expect(channels.list()[0]?.botId).toBeNull()
+    expect(runner.calls[1]?.chatId).toBe(runner.calls[0]?.chatId)
+    expect(host.services.chats.get(runner.calls[1]!.chatId).botId).toBeNull()
+  })
+
+  it('refuses a bot that does not exist and keeps the old settings', async () => {
+    const { channels, config, bot } = await withBot()
+    expect(() => channels.configure(config({ botId: 'gone' }))).toThrow('That bot no longer exists')
+    expect(channels.list()[0]?.botId).toBe(bot.id)
+  })
+
+  it('treats a missing bot id from an older caller as plain Gramatrix', async () => {
+    const { channels, config } = await withBot()
+    const legacy: Partial<ChannelConfigInput> = config()
+    delete legacy.botId
+    expect(channels.configure(legacy as ChannelConfigInput).botId).toBeNull()
   })
 })

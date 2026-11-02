@@ -115,3 +115,24 @@ optionally `allowedTools`.
 - Cancelling the run cancels every subagent.
 - Only its final text returns to the parent. Its tool calls are stored with a `subagentId` so the
   interface can show them, but they are left out of the conversation sent to the model.
+
+## Memory review
+
+A bot with `learns` on reviews its chats in the background and saves what will matter later, such
+as who the user is, their preferences and corrections. The code is in
+`src/host/bots/memory-review.ts`.
+
+- A review is due when a run that added a user message finishes and the chat then has a multiple
+  of `MEMORY_REVIEW_INTERVAL` (10) user messages. Counting messages means nothing extra is stored.
+  A retry adds no message, so it never starts a review.
+- It starts after the `finished` event, so it never delays or fails the reply. Only one review runs
+  per chat at a time. Errors are logged and nothing appears in the chat.
+- It uses the model of the chat, makes at most `MEMORY_REVIEW_MAX_STEPS` model calls, and its only
+  tool is `memory`. Writes go through the same checks as in a chat, so a refused write saves
+  nothing.
+- The model gets the bot's identity, soul and current memory from `botInstructions`, then the
+  conversation since the previous review as plain text. Tool calls and reasoning are left out, and
+  the text is cut to the newest `MEMORY_REVIEW_MAX_CHARACTERS`.
+- Its tokens are recorded with the usage source `memory`.
+- `AgentService.stop` cancels running reviews, and so does removing the chat, its project or the
+  bot.

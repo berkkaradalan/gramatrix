@@ -80,6 +80,8 @@ export interface Chat {
   id: string
   /** Null for a general chat, which has no folder and therefore no file or command tools. */
   projectId: string | null
+  /** The bot this chat talks to. Null for a plain chat with Gramatrix. */
+  botId: string | null
   title: string
   model: ModelRef
   permissionMode: PermissionMode
@@ -166,6 +168,8 @@ export interface Job {
   enabled: boolean
   /** Run once on startup if a scheduled time passed while the app was closed. */
   catchUp: boolean
+  /** The bot that runs the job, with its soul and memory. Null for plain Gramatrix. */
+  botId: string | null
   lastRunAt: number | null
   nextRunAt: number | null
   createdAt: number
@@ -196,6 +200,11 @@ export interface Channel {
   projectId: string | null
   model: ModelRef | null
   permissionMode: PermissionMode
+  /**
+   * The bot that answers messages. Null for plain Gramatrix. Its memory is only used in direct
+   * messages with a paired person, never in groups or channels others can read.
+   */
+  botId: string | null
   state: ChannelState
   error: string | null
 }
@@ -296,8 +305,44 @@ export const DEFAULT_SETTINGS: AppSettings = {
   defaultPermissionMode: 'ask'
 }
 
-/** What caused a model call. */
-export type UsageSource = 'chat' | 'job' | 'channel' | 'subagent'
+/** What a bot remembers: its own notes, or what it knows about the user. */
+export const MEMORY_KINDS = ['notes', 'user'] as const
+export type MemoryKind = (typeof MEMORY_KINDS)[number]
+
+/**
+ * Characters each kind of memory may hold. Memory goes into every request, so the limit keeps
+ * its cost small and makes the bot replace old entries instead of piling up new ones.
+ */
+export const MEMORY_LIMITS: Record<MemoryKind, number> = { notes: 2200, user: 1375 }
+
+/** Longest soul text. It is part of every request, like memory. */
+export const SOUL_LIMIT = 4000
+
+/** An agent with its own personality and a memory that lasts between chats. */
+export interface Bot {
+  id: string
+  name: string
+  /** Personality and standing instructions, written by the user. */
+  soul: string
+  /** Model for new chats with this bot. */
+  model: ModelRef
+  /** Whether the bot reviews its chats on its own to update its memory. */
+  learns: boolean
+  createdAt: number
+  updatedAt: number
+}
+
+export interface BotMemory {
+  id: string
+  botId: string
+  kind: MemoryKind
+  content: string
+  createdAt: number
+  updatedAt: number
+}
+
+/** What caused a model call. `memory` is a bot reviewing a chat to update its memory. */
+export type UsageSource = 'chat' | 'job' | 'channel' | 'subagent' | 'memory'
 
 export interface UsageTotals {
   runs: number

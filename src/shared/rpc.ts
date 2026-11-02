@@ -2,6 +2,8 @@ import type {
   AppInfo,
   AppSettings,
   ApprovalRequest,
+  Bot,
+  BotMemory,
   Channel,
   ChannelKind,
   ChannelPairing,
@@ -9,6 +11,7 @@ import type {
   ChatMessage,
   Job,
   JobRun,
+  MemoryKind,
   ModelList,
   ModelRef,
   PermissionMode,
@@ -30,8 +33,18 @@ export interface ProviderTestResult {
 
 export type JobInput = Pick<
   Job,
-  'projectId' | 'name' | 'cron' | 'prompt' | 'model' | 'permissionMode' | 'enabled' | 'catchUp'
+  | 'projectId'
+  | 'name'
+  | 'cron'
+  | 'prompt'
+  | 'model'
+  | 'permissionMode'
+  | 'enabled'
+  | 'catchUp'
+  | 'botId'
 >
+
+export type BotInput = Pick<Bot, 'name' | 'soul' | 'model' | 'learns'>
 
 export interface ChannelConfigInput {
   kind: ChannelKind
@@ -39,6 +52,8 @@ export interface ChannelConfigInput {
   projectId: string | null
   model: ModelRef | null
   permissionMode: PermissionMode
+  /** Null for plain Gramatrix. */
+  botId: string | null
 }
 
 /**
@@ -81,11 +96,24 @@ export interface RpcMethods {
   /** Every chat, newest first. The interface groups them by project. */
   'chats.list': { params: void; result: Chat[] }
   'chats.create': {
-    params: { projectId: string | null; model: ModelRef; permissionMode?: PermissionMode }
+    params: {
+      projectId: string | null
+      model: ModelRef
+      permissionMode?: PermissionMode
+      /** Makes the chat talk to this bot. */
+      botId?: string | null
+    }
     result: Chat
   }
   'chats.update': {
-    params: { id: string; title?: string; model?: ModelRef; permissionMode?: PermissionMode }
+    params: {
+      id: string
+      title?: string
+      model?: ModelRef
+      permissionMode?: PermissionMode
+      /** Moves the chat into a project, or out of one with null. */
+      projectId?: string | null
+    }
     result: Chat
   }
   'chats.remove': { params: { id: string }; result: void }
@@ -106,6 +134,20 @@ export interface RpcMethods {
   'jobs.runs': { params: { jobId: string }; result: JobRun[] }
 
   'usage.report': { params: UsageQuery; result: UsageReport }
+
+  /** Bots in name order. */
+  'bots.list': { params: void; result: Bot[] }
+  'bots.create': { params: BotInput; result: Bot }
+  'bots.update': { params: { id: string; patch: Partial<BotInput> }; result: Bot }
+  /** Deletes the bot and its memory. Its chats stay as plain chats. */
+  'bots.remove': { params: { id: string }; result: void }
+  'bots.memories': { params: { botId: string }; result: BotMemory[] }
+  'bots.addMemory': {
+    params: { botId: string; kind: MemoryKind; content: string }
+    result: BotMemory
+  }
+  'bots.updateMemory': { params: { id: string; content: string }; result: BotMemory }
+  'bots.removeMemory': { params: { id: string }; result: void }
 
   'channels.list': { params: void; result: Channel[] }
   'channels.configure': { params: ChannelConfigInput; result: Channel }
@@ -148,6 +190,8 @@ export interface HostEvents {
   'channels.changed': Channel[]
   'settings.changed': AppSettings
   'usage.changed': { chatId: string | null; projectId: string | null }
+  /** A bot or its memory changed. */
+  'bots.changed': { botId: string }
   /** Sent by the main process when the window is hidden, minimized or shown again. */
   'window.visibility': { visible: boolean }
 }

@@ -20,6 +20,7 @@ Anyone who can message the agent can act on your project, so access is closed by
   need approval is denied. Raising the mode lets paired accounts change your files or run commands
   without you seeing it first. Only do this if you trust every paired account.
 - **Other bots are ignored.**
+- **A bot's memory stays private.** See [Answering as a bot](#answering-as-a-bot).
 
 Remove access at any time from the channel settings. Disabling a channel or saving its settings
 cancels its active runs. Messages still waiting are dropped when the channel is disabled, and run
@@ -55,6 +56,27 @@ Telegram allows one connection per bot token, so do not use the token in another
 - Send `/new` to start a fresh chat.
 - Messages in one conversation run in order. Long replies arrive in several messages.
 
+## Answering as a bot
+
+A channel answers as plain Gramatrix unless you pick a [bot](bots.md) under **Bot** in its
+settings. Picking a bot also picks its model, which you can change again. The bot then answers
+with its name and soul, and its chats show up as chats with that bot. Changing the bot starts a new
+chat in every conversation. Deleting the bot turns the channel back into plain Gramatrix.
+
+A bot's memory holds personal facts about you, so it is only used where nobody else reads along:
+
+| Where the message comes from                  | Soul | Memory and `memory` tool |
+| --------------------------------------------- | ---- | ------------------------ |
+| Telegram private chat with the bot            | Yes  | Yes                      |
+| Slack direct message with the bot             | Yes  | Yes                      |
+| Telegram group, supergroup or channel         | Yes  | No                       |
+| Telegram Business chat                        | Yes  | No                       |
+| Slack channel, private channel or group DM    | Yes  | No                       |
+| Anything the platform does not clearly report | Yes  | No                       |
+
+In a shared conversation the bot is told that its memory is not available and that it should not
+share personal details. It cannot add to its memory there either.
+
 ## For developers
 
 - `src/host/channels/adapter.ts` is the whole contract with a platform. Only
@@ -67,3 +89,12 @@ Telegram allows one connection per bot token, so do not use the token in another
   Durable state lives in the `channels`, `channel_pairings` and `channel_chats` tables.
 - Tokens are read through `context.getSecret`. Saving a channel always reconnects, so write the
   secret before calling `channels.configure`.
+- `InboundMessage.isDirect` is true only when the platform confirms a one to one conversation.
+  Chat SDK's `thread.isDM` alone is not enough, because it calls a Telegram Business chat a direct
+  message. `isDirectConversation` in `chat-sdk-adapter.ts` also requires the raw message to say so:
+  Telegram `chat.type` is `private` with no `business_connection_id`, and Slack `channel_type` is
+  `im`. A missing value counts as shared.
+- `isDirect` gates pairing and becomes `withMemory` on the headless run, which decides whether a
+  bot gets its memory and `memory` tool. The flag is off unless a caller sets it.
+- `channels.bot_id` links the bot. A thread chat is reused only while both the project and the bot
+  still match the channel.

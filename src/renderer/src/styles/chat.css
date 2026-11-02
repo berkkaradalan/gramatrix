@@ -55,6 +55,21 @@
   white-space: nowrap;
 }
 
+.project-tag-button {
+  border: none;
+  cursor: pointer;
+  transition: color var(--transition);
+}
+
+.project-tag-button:hover:not(:disabled),
+.project-tag-button[data-state='open'] {
+  color: var(--text);
+}
+
+.project-tag-button:disabled {
+  cursor: default;
+}
+
 .usage-chip {
   display: inline-flex;
   flex: none;
@@ -518,4 +533,78 @@
 .approval h3 {
   min-width: 0;
   overflow-wrap: anywhere;
+}
+
+/* The bot of a chat, in the header. Opens its page. */
+.bot-tag {
+  border: none;
+  color: var(--text);
+  font-weight: 500;
+  cursor: pointer;
+  transition: background var(--transition);
+}
+
+.bot-tag:hover {
+  background: var(--surface-active);
+}
+
+.bot-tag .bot-avatar-small {
+  width: 14px;
+  height: 14px;
+  font-size: 9px;
+}
+
+/* Memory changes read as plain sentences, not as a raw tool call. */
+.memory-call {
+  min-width: 0;
+  font-size: var(--text-sm);
+}
+
+.memory-call-head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 28px;
+  color: var(--muted);
+}
+
+.memory-call-head svg {
+  flex: none;
+}
+
+.memory-call-kind {
+  padding: 0 var(--space-1);
+  background: var(--surface-hover);
+  border-radius: 4px;
+  font-size: var(--text-xs);
+}
+
+.memory-call-body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 0 0 var(--space-1) 6px;
+  padding-left: var(--space-4);
+  border-left: 1px solid var(--border-strong);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.memory-call-previous {
+  color: var(--faint);
+  text-decoration: line-through;
+}
+
+/* Nothing changed when it failed, so nothing reads as removed. */
+.memory-call-failed .memory-call-previous {
+  text-decoration: none;
+}
+
+.memory-call-failed .memory-call-head > svg:first-child {
+  color: var(--danger);
+}
+
+.memory-call-error {
+  margin: 0 0 var(--space-1) 22px;
+  color: var(--danger);
 }

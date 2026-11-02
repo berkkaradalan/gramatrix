@@ -7,7 +7,15 @@ import {
   useState,
   type ReactNode
 } from 'react'
-import type { AppInfo, AppSettings, Chat, ModelRef, Project, ProviderStatus } from '@shared/types'
+import type {
+  AppInfo,
+  AppSettings,
+  Bot,
+  Chat,
+  ModelRef,
+  Project,
+  ProviderStatus
+} from '@shared/types'
 import { applyAppearance } from '../lib/appearance'
 import { errorMessage } from '../lib/format'
 import { pushRecentModel } from '../lib/models'
@@ -22,6 +30,11 @@ export interface AppState {
   chats: Chat[]
   chatsLoaded: boolean
   chatsError: string | null
+  /** Bots in name order. Empty until they load. */
+  bots: Bot[]
+  botsLoaded: boolean
+  /** Set when the bot list could not load. Chats still work without it. */
+  botsError: string | null
   providers: ProviderStatus[]
   providersLoaded: boolean
   /** Set when the provider list could not load. The rest of the app still works. */
@@ -31,6 +44,7 @@ export interface AppState {
   reloadProjects(): Promise<Project[]>
   reloadProviders(): Promise<ProviderStatus[]>
   reloadChats(): Promise<void>
+  reloadBots(): Promise<Bot[]>
 }
 
 const AppContext = createContext<AppState | null>(null)
@@ -65,6 +79,9 @@ export function AppProvider({ children }: { children: ReactNode }): ReactNode {
   const [chats, setChats] = useState<Chat[]>([])
   const [chatsLoaded, setChatsLoaded] = useState(false)
   const [chatsError, setChatsError] = useState<string | null>(null)
+  const [bots, setBots] = useState<Bot[]>([])
+  const [botsLoaded, setBotsLoaded] = useState(false)
+  const [botsError, setBotsError] = useState<string | null>(null)
   const [providers, setProviders] = useState<ProviderStatus[]>([])
   const [providersLoaded, setProvidersLoaded] = useState(false)
   const [providersError, setProvidersError] = useState<string | null>(null)
@@ -100,6 +117,21 @@ export function AppProvider({ children }: { children: ReactNode }): ReactNode {
     }
   }, [])
 
+  // A failure here must not stop the app, so it only shows on the Bots page.
+  const reloadBots = useCallback(async () => {
+    try {
+      const list = await invoke('bots.list', undefined)
+      setBots(list)
+      setBotsError(null)
+      return list
+    } catch (error) {
+      setBotsError(errorMessage(error))
+      return []
+    } finally {
+      setBotsLoaded(true)
+    }
+  }, [])
+
   const load = useCallback(async () => {
     setBootError(null)
     try {
@@ -108,14 +140,15 @@ export function AppProvider({ children }: { children: ReactNode }): ReactNode {
         invoke('settings.get', undefined),
         reloadProjects(),
         reloadProviders(),
-        reloadChats()
+        reloadChats(),
+        reloadBots()
       ])
       setSettings(normalizeSettings(loadedSettings))
       setBoot({ info })
     } catch (error) {
       setBootError(errorMessage(error))
     }
-  }, [reloadChats, reloadProjects, reloadProviders])
+  }, [reloadBots, reloadChats, reloadProjects, reloadProviders])
 
   useEffect(() => {
     void load()
@@ -128,6 +161,12 @@ export function AppProvider({ children }: { children: ReactNode }): ReactNode {
 
   useHostEvent('settings.changed', (next) => setSettings(normalizeSettings(next)))
   useHostEvent('chats.changed', () => void reloadChats())
+  useHostEvent('bots.changed', ({ botId }) => {
+    void reloadBots().then((list) => {
+      // Deleting a bot turns its chats into plain chats, so they need to load again.
+      if (!list.some(({ id }) => id === botId)) void reloadChats()
+    })
+  })
 
   const updateSettings = useCallback(async (patch: Partial<AppSettings>) => {
     setSettings((current) => (current ? { ...current, ...patch } : current))
@@ -152,6 +191,9 @@ export function AppProvider({ children }: { children: ReactNode }): ReactNode {
             chats,
             chatsLoaded,
             chatsError,
+            bots,
+            botsLoaded,
+            botsError,
             providers,
             providersLoaded,
             providersError,
@@ -159,7 +201,8 @@ export function AppProvider({ children }: { children: ReactNode }): ReactNode {
             rememberModel,
             reloadProjects,
             reloadProviders,
-            reloadChats
+            reloadChats,
+            reloadBots
           }
         : null,
     [
@@ -169,6 +212,9 @@ export function AppProvider({ children }: { children: ReactNode }): ReactNode {
       chats,
       chatsLoaded,
       chatsError,
+      bots,
+      botsLoaded,
+      botsError,
       providers,
       providersLoaded,
       providersError,
@@ -176,7 +222,8 @@ export function AppProvider({ children }: { children: ReactNode }): ReactNode {
       rememberModel,
       reloadProjects,
       reloadProviders,
-      reloadChats
+      reloadChats,
+      reloadBots
     ]
   )
 

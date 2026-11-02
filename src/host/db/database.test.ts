@@ -6,6 +6,10 @@ import { describe, expect, it } from 'vitest'
 import { openDatabase, type Database } from './database'
 import { MIGRATIONS } from './migrations'
 
+/** Named, because later migrations add columns to chats. */
+const CHAT_COLUMNS =
+  '(id, project_id, title, model_provider, model_name, permission_mode, created_at, updated_at)'
+
 function databasePath(): string {
   return join(mkdtempSync(join(tmpdir(), 'gramatrix-db-')), 'test.db')
 }
@@ -88,7 +92,8 @@ describe('general chat migration', () => {
       model_name: 'glm',
       permission_mode: 'read-only',
       created_at: 3,
-      updated_at: 4
+      updated_at: 4,
+      bot_id: null
     })
   })
 
@@ -96,7 +101,9 @@ describe('general chat migration', () => {
     const path = databasePath()
     createVersionTwoDatabase(path)
     const db = openDatabase(path)
-    db.exec(`INSERT INTO chats VALUES ('c3', NULL, 'General', 'openai', 'gpt', 'ask', 5, 5)`)
+    db.exec(
+      `INSERT INTO chats ${CHAT_COLUMNS} VALUES ('c3', NULL, 'General', 'openai', 'gpt', 'ask', 5, 5)`
+    )
     expect(count(db, 'chats')).toBe(3)
   })
 
@@ -105,7 +112,9 @@ describe('general chat migration', () => {
     createVersionTwoDatabase(path)
     const db = openDatabase(path)
     expect(() =>
-      db.exec(`INSERT INTO chats VALUES ('c3', 'nope', 'Bad', 'openai', 'gpt', 'ask', 5, 5)`)
+      db.exec(
+        `INSERT INTO chats ${CHAT_COLUMNS} VALUES ('c3', 'nope', 'Bad', 'openai', 'gpt', 'ask', 5, 5)`
+      )
     ).toThrow()
   })
 
@@ -113,7 +122,9 @@ describe('general chat migration', () => {
     const path = databasePath()
     createVersionTwoDatabase(path)
     const db = openDatabase(path)
-    db.exec(`INSERT INTO chats VALUES ('c3', NULL, 'General', 'openai', 'gpt', 'ask', 5, 5)`)
+    db.exec(
+      `INSERT INTO chats ${CHAT_COLUMNS} VALUES ('c3', NULL, 'General', 'openai', 'gpt', 'ask', 5, 5)`
+    )
 
     db.exec(`DELETE FROM chats WHERE id = 'c1'`)
     expect(count(db, 'messages')).toBe(1)
@@ -140,7 +151,7 @@ describe('usage events migration', () => {
     const db = openDatabase(':memory:')
     db.exec(`
       INSERT INTO projects VALUES ('p1', 'Demo', '/work/demo', 1, 1);
-      INSERT INTO chats VALUES ('c1', 'p1', 'First', 'openai', 'gpt', 'ask', 1, 2);
+      INSERT INTO chats ${CHAT_COLUMNS} VALUES ('c1', 'p1', 'First', 'openai', 'gpt', 'ask', 1, 2);
       INSERT INTO usage_events
         (id, chat_id, project_id, provider, model, source, input_tokens, output_tokens,
          cached_input_tokens, reasoning_tokens, project_label, model_label, created_at)
@@ -154,5 +165,88 @@ describe('usage events migration', () => {
         project_label: 'Demo'
       }
     )
+  })
+})
+
+describe('bots migration', () => {
+  function databaseWithBot(): Database {
+    const db = openDatabase(':memory:')
+    db.exec(`
+      INSERT INTO bots VALUES ('b1', 'Ada', 'Curious', 'openai', 'gpt', 1, 1, 1);
+      INSERT INTO bot_memories VALUES ('n1', 'b1', 'notes', 'Uses pnpm', 1, 1);
+      INSERT INTO chats ${CHAT_COLUMNS} VALUES ('c1', NULL, 'Chat', 'openai', 'gpt', 'ask', 1, 1);
+      UPDATE chats SET bot_id = 'b1' WHERE id = 'c1';
+    `)
+    return db
+  }
+
+  it('keeps chats as plain chats and deletes the memory when a bot is deleted', () => {
+    const db = databaseWithBot()
+
+    db.exec(`DELETE FROM bots WHERE id = 'b1'`)
+
+    expect(db.prepare('SELECT id, bot_id FROM chats').all()).toEqual([{ id: 'c1', bot_id: null }])
+    expect(count(db, 'bot_memories')).toBe(0)
+  })
+
+  it('rejects a chat linked to an unknown bot', () => {
+    const db = databaseWithBot()
+    expect(() => db.exec(`UPDATE chats SET bot_id = 'nope' WHERE id = 'c1'`)).toThrow()
+  })
+
+  it('leaves existing chats without a bot', () => {
+    const path = databasePath()
+    createVersionTwoDatabase(path)
+    const db = openDatabase(path)
+    expect(db.prepare('SELECT DISTINCT bot_id FROM chats').all()).toEqual([{ bot_id: null }])
+  })
+})
+
+describe('channel and job bots migration', () => {
+  function databaseWithLinks(): Database {
+    const path = databasePath()
+    createVersionTwoDatabase(path)
+    const db = openDatabase(path)
+    db.exec(`
+      INSERT INTO bots VALUES ('b1', 'Ada', 'Curious', 'openai', 'gpt', 1, 1, 1);
+      INSERT INTO channels (kind, enabled, project_id, model_provider, model_name, permission_mode)
+        VALUES ('telegram', 1, NULL, NULL, NULL, 'read-only');
+      UPDATE channels SET bot_id = 'b1';
+      UPDATE jobs SET bot_id = 'b1';
+    `)
+    return db
+  }
+
+  it('leaves existing jobs with plain Gramatrix', () => {
+    const path = databasePath()
+    createVersionTwoDatabase(path)
+    const db = openDatabase(path)
+    expect(db.prepare('SELECT id, bot_id FROM jobs').all()).toEqual([{ id: 'j1', bot_id: null }])
+  })
+
+  it('keeps channels and jobs and unlinks them when their bot is deleted', () => {
+    const db = databaseWithLinks()
+
+    db.exec(`DELETE FROM bots WHERE id = 'b1'`)
+
+    expect(db.prepare('SELECT kind, bot_id FROM channels').all()).toEqual([
+      { kind: 'telegram', bot_id: null }
+    ])
+    expect(db.prepare('SELECT id, bot_id FROM jobs').all()).toEqual([{ id: 'j1', bot_id: null }])
+  })
+
+  it('rejects a channel or a job linked to an unknown bot', () => {
+    const db = databaseWithLinks()
+    expect(() => db.exec(`UPDATE channels SET bot_id = 'nope'`)).toThrow()
+    expect(() => db.exec(`UPDATE jobs SET bot_id = 'nope'`)).toThrow()
+  })
+})
+
+describe('channel chat privacy migration', () => {
+  it('counts existing channel threads as shared until a message proves otherwise', () => {
+    const path = databasePath()
+    createVersionTwoDatabase(path)
+    const db = openDatabase(path)
+    expect(db.prepare('SELECT is_direct FROM channel_chats').all()).toEqual([{ is_direct: 0 }])
   })
 })

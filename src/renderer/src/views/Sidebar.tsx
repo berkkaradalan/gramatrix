@@ -1,4 +1,5 @@
 import {
+  Bot as BotIcon,
   CalendarClock,
   ChartNoAxesColumn,
   ChevronRight,
@@ -71,11 +72,13 @@ function NavItem({
 }
 
 function ChatRow({ chat, indented }: { chat: Chat; indented?: boolean }): ReactNode {
+  const { bots } = useApp()
   const { route, navigate } = useNavigation()
   const running = useIsRunning(chat.id)
   const { rename, remove, dialog } = useChatActions(chat)
   const [menuOpen, setMenuOpen] = useState(false)
   const active = route.view === 'chat' && route.chatId === chat.id
+  const bot = chat.botId ? bots.find(({ id }) => id === chat.botId) : undefined
 
   return (
     <div className={menuOpen ? 'side-row side-row-held' : 'side-row'}>
@@ -85,6 +88,12 @@ function ChatRow({ chat, indented }: { chat: Chat; indented?: boolean }): ReactN
         aria-current={active ? 'page' : undefined}
         onClick={() => navigate({ view: 'chat', chatId: chat.id })}
       >
+        {bot && (
+          <span className="side-bot" title={`Chat with ${bot.name}`}>
+            <BotIcon size={12} aria-hidden />
+            <span className="side-bot-name">{bot.name}</span>
+          </span>
+        )}
         <span className="side-label">{chat.title}</span>
         {running ? (
           <StatusDot tone="busy" label="Running" />
@@ -242,6 +251,13 @@ export function Sidebar({
           collapsed={collapsed}
           shortcut={`${modKey} K`}
           onSelect={openPalette}
+        />
+        <NavItem
+          icon={BotIcon}
+          label="Bots"
+          collapsed={collapsed}
+          active={route.view === 'bots' || route.view === 'bot'}
+          onSelect={() => navigate({ view: 'bots' })}
         />
         <NavItem
           icon={CalendarClock}

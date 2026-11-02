@@ -137,5 +137,39 @@ export const MIGRATIONS: readonly string[] = [
   CREATE INDEX usage_events_by_time ON usage_events(created_at);
   CREATE INDEX usage_events_by_chat ON usage_events(chat_id);
   CREATE INDEX usage_events_by_project ON usage_events(project_id);
+  `,
+  // Bots and their memory. Deleting a bot keeps its chats, which become plain chats.
+  `
+  CREATE TABLE bots (
+    id TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    soul TEXT NOT NULL,
+    model_provider TEXT NOT NULL,
+    model_name TEXT NOT NULL,
+    learns INTEGER NOT NULL,
+    created_at INTEGER NOT NULL,
+    updated_at INTEGER NOT NULL
+  );
+  CREATE TABLE bot_memories (
+    id TEXT PRIMARY KEY,
+    bot_id TEXT NOT NULL REFERENCES bots(id) ON DELETE CASCADE,
+    kind TEXT NOT NULL,
+    content TEXT NOT NULL,
+    created_at INTEGER NOT NULL,
+    updated_at INTEGER NOT NULL
+  );
+  CREATE INDEX bot_memories_by_bot ON bot_memories(bot_id, kind, created_at);
+  ALTER TABLE chats ADD COLUMN bot_id TEXT REFERENCES bots(id) ON DELETE SET NULL;
+  `,
+  // The bot that answers a channel or runs a job. Deleting the bot turns them back into plain
+  // Gramatrix instead of deleting them.
+  `
+  ALTER TABLE channels ADD COLUMN bot_id TEXT REFERENCES bots(id) ON DELETE SET NULL;
+  ALTER TABLE jobs ADD COLUMN bot_id TEXT REFERENCES bots(id) ON DELETE SET NULL;
+  `,
+  // Whether a channel thread is a one to one conversation with the paired person. A bot only uses
+  // its memory there, also when the chat is continued in the app. Unknown counts as shared.
+  `
+  ALTER TABLE channel_chats ADD COLUMN is_direct INTEGER NOT NULL DEFAULT 0;
   `
 ]

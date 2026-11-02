@@ -13,6 +13,7 @@ const JOB: Job = {
   permissionMode: 'read-only',
   enabled: true,
   catchUp: false,
+  botId: null,
   lastRunAt: null,
   nextRunAt: null,
   createdAt: 1
@@ -24,6 +25,7 @@ const CHANNEL: Channel = {
   projectId: null,
   model: null,
   permissionMode: 'read-only',
+  botId: null,
   state: 'disabled',
   error: null
 }

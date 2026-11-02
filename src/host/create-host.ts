@@ -1,4 +1,5 @@
 import { AgentService } from './agent/agent-service'
+import { BotService } from './bots/bot-service'
 import { ChannelService } from './channels/channel-service'
 import type { HostContext } from './context'
 import { ProviderService } from './providers/provider-service'
@@ -19,6 +20,7 @@ export interface Services {
   jobs: JobService
   channels: ChannelService
   usage: UsageService
+  bots: BotService
 }
 
 export interface Host {
@@ -38,7 +40,8 @@ export function createHost(context: HostContext): Host {
   const resolveModel = createModelResolver(context)
   const providers = new ProviderService(context, resolveModel)
   const usage = new UsageService(context, { findModel: (ref) => providers.findModel(ref) })
-  const agent = new AgentService(context, { chats, projects, resolveModel, usage })
+  const bots = new BotService(context)
+  const agent = new AgentService(context, { chats, projects, resolveModel, usage, bots })
   const jobs = new JobService(context, { chats, runner: agent })
   const channels = new ChannelService(context, { chats, settings, runner: agent })
 
@@ -57,7 +60,8 @@ export function createHost(context: HostContext): Host {
     agent,
     jobs,
     channels,
-    usage
+    usage,
+    bots
   }
   for (const service of Object.values(services)) service.register(router)
 

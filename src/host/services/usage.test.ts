@@ -184,11 +184,12 @@ describe('UsageService.report', () => {
     })
     await usage.record({ chat, project, source: 'chat', step: STEP })
     await usage.record({ chat, project, source: 'subagent', step: STEP })
+    await usage.record({ chat, project, source: 'memory', step: STEP })
     await usage.record({ chat: zaiChat, project: null, source: 'job', step: STEP })
 
     const result = report(usage)
     expect(result.byProvider.map(({ key, label, runs }) => [key, label, runs])).toEqual([
-      ['openai', 'ChatGPT (OpenAI)', 2],
+      ['openai', 'ChatGPT (OpenAI)', 3],
       ['zai', 'Z.ai API', 1]
     ])
     expect(result.byModel.map(({ key }) => key)).toEqual(['openai:gpt', 'zai:glm'])
@@ -199,6 +200,7 @@ describe('UsageService.report', () => {
     expect(result.bySource.map(({ key, label }) => [key, label]).sort()).toEqual([
       ['chat', 'Chats'],
       ['job', 'Scheduled jobs'],
+      ['memory', 'Bot memory'],
       ['subagent', 'Subagents']
     ])
   })

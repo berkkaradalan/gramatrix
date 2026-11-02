@@ -16,6 +16,10 @@ mac:
   identity: '-'
   hardenedRuntime: false
 linux:
-  target: [AppImage, deb]
+  target: [deb]
+  icon: build/icons
   category: Development
   maintainer: Gramatrix Contributors <berkkaradalan@users.noreply.github.com>
+deb:
+  # website/public/install.sh downloads this file by name.
+  artifactName: gramatrix-linux-amd64.${ext}

@@ -1,6 +1,6 @@
 export const REPOSITORY_URL = 'https://github.com/berkkaradalan/gramatrix'
 export const RELEASES_URL = `${REPOSITORY_URL}/releases`
-export const MAC_INSTALL_COMMAND = 'curl -fsSL https://gramatrix.com/install.sh | bash'
+export const INSTALL_COMMAND = 'curl -fsSL https://gramatrix.com/install.sh | bash'
 
 export const TAGLINE = 'A desktop coding agent that runs on your own keys.'
 export const DESCRIPTION =

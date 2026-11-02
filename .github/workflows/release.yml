@@ -37,7 +37,6 @@ jobs:
           if-no-files-found: error
           path: |
             dist/*.deb
-            dist/*.AppImage
             dist/*.zip
 
   publish:

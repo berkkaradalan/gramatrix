@@ -5,7 +5,7 @@ import '../styles/site.css'
 import Icon from '../components/Icon.astro'
 import {
   DESCRIPTION,
-  MAC_INSTALL_COMMAND,
+  INSTALL_COMMAND,
   PROVIDERS,
   RELEASES_URL,
   REPOSITORY_URL,
@@ -41,11 +41,6 @@ const features = [
     image: 'channels',
     alt: 'Telegram channel setup with pairing steps'
   }
-]
-
-const linuxBuilds = [
-  { key: 'linux-deb', label: 'Debian and Ubuntu (.deb)' },
-  { key: 'linux-appimage', label: 'AppImage' }
 ]
 
 const title = `Gramatrix - ${TAGLINE}`
@@ -175,36 +170,19 @@ const socialImage = new URL('/og.png', Astro.site).href
       <section class="section download" id="download">
         <h2>Download</h2>
         <p class="status" data-release-status>Choose your system.</p>
-        <div class="downloads">
-          <div data-mac-install>
-            <h3>macOS <span class="recommended">Your system</span></h3>
-            <div class="install-command">
-              <code>{MAC_INSTALL_COMMAND}</code>
-              <button type="button" data-copy={MAC_INSTALL_COMMAND}>Copy</button>
-            </div>
-            <p class="install-note">
-              Paste this into Terminal once. Gramatrix goes into your Applications folder and opens
-              from Launchpad, Spotlight or the Dock like any other app.
-            </p>
-          </div>
-          <div>
-            <h3>Linux</h3>
-            <ul>
-              {
-                linuxBuilds.map(({ key, label }) => (
-                  <li>
-                    <a class="download-row" href={RELEASES_URL} data-card={key}>
-                      {label}
-                      <span class="recommended">Your system</span>
-                      <small data-size />
-                      <Icon name="download" />
-                    </a>
-                  </li>
-                ))
-              }
-            </ul>
-          </div>
+        <div class="install-command">
+          <code>{INSTALL_COMMAND}</code>
+          <button type="button" data-copy={INSTALL_COMMAND}>Copy</button>
         </div>
+        <p class="install-note">
+          Paste this into Terminal once, on a Mac or on Debian and Ubuntu. Gramatrix installs next
+          to your other apps and opens like any of them.
+        </p>
+        <a class="download-row" href={RELEASES_URL} data-deb>
+          Or download the Linux package (.deb)
+          <small data-size></small>
+          <Icon name="download" />
+        </a>
         <p class="fine">
           The Mac app is not signed by Apple yet, which is why it installs from Terminal. Windows is
           not supported yet. Want to contribute? <a href="/docs/contributing/">Start here</a>.

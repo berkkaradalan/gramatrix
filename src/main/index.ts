@@ -22,7 +22,13 @@ import {
   type MainMethod,
   type ProviderTestResult
 } from '@shared/rpc'
-import type { AppInfo, AppSettings, ProviderId, TransparencySupport } from '@shared/types'
+import {
+  BOT_PICTURE_MAX_LENGTH,
+  type AppInfo,
+  type AppSettings,
+  type ProviderId,
+  type TransparencySupport
+} from '@shared/types'
 import { MEDIA_SCHEME, importVideo, videoResponse } from './background-videos'
 import { readOpencodeKey } from './opencode-keys'
 import { SecretStore } from './secret-store'
@@ -46,6 +52,7 @@ let nextRequestId = 1
 let host: UtilityProcess | null = null
 let window: BrowserWindow | null = null
 const TRAY_ICON_SIZE = 16
+const BOT_PICTURE_SIZE = 128
 let tray: Tray | null = null
 let secrets: SecretStore
 let isQuitting = false
@@ -164,6 +171,8 @@ async function handleMainMethod(method: MainMethod, params: never): Promise<unkn
       return pickDirectory()
     case 'app.pickBackgroundVideo':
       return pickBackgroundVideo()
+    case 'app.pickBotPicture':
+      return pickBotPicture()
     case 'app.openExternal': {
       const { url } = params as { url: string }
       if (!url.startsWith('https://')) throw new Error('Only https links can be opened.')
@@ -190,6 +199,39 @@ async function pickDirectory(): Promise<string | null> {
     ? await dialog.showOpenDialog(window, options)
     : await dialog.showOpenDialog(options)
   return result.canceled ? null : (result.filePaths[0] ?? null)
+}
+
+/**
+ * Crops the picture to its centered square and shrinks it. Bots are shown at most 44 points wide,
+ * so a small PNG is sharp on every screen and stays small enough to store with the bot.
+ */
+async function pickBotPicture(): Promise<string | null> {
+  const options: Electron.OpenDialogOptions = {
+    title: 'Choose a picture for the bot',
+    properties: ['openFile'],
+    filters: [{ name: 'Pictures', extensions: ['png', 'jpg', 'jpeg'] }]
+  }
+  const result = window
+    ? await dialog.showOpenDialog(window, options)
+    : await dialog.showOpenDialog(options)
+  const [path] = result.filePaths
+  if (result.canceled || !path) return null
+
+  const image = nativeImage.createFromPath(path)
+  if (image.isEmpty()) throw new Error('That file could not be read as a PNG or JPEG picture.')
+  const { width, height } = image.getSize()
+  const side = Math.min(width, height)
+  const square = image.crop({
+    x: Math.floor((width - side) / 2),
+    y: Math.floor((height - side) / 2),
+    width: side,
+    height: side
+  })
+  const picture = square
+    .resize({ width: BOT_PICTURE_SIZE, height: BOT_PICTURE_SIZE, quality: 'best' })
+    .toDataURL()
+  if (picture.length > BOT_PICTURE_MAX_LENGTH) throw new Error('That picture is too large.')
+  return picture
 }
 
 async function pickBackgroundVideo(): Promise<string | null> {

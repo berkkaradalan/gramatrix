@@ -29,6 +29,8 @@ export interface FakeSeed {
   memories?: BotMemory[]
   /** Makes `bots.create` and `bots.update` fail with this message, as the host does on bad input. */
   botError?: string
+  /** What the bot picture dialog returns, as if the user picked a file. */
+  botPicture?: string
 }
 
 export interface FakeBackend {
@@ -94,6 +96,7 @@ export function installFakeBackend({
       bySource: []
     },
     'app.pickBackgroundVideo': null,
+    'app.pickBotPicture': seed.botPicture ?? null,
     'jobs.list': [],
     'jobs.runs': [],
     'channels.list': [],
@@ -203,9 +206,19 @@ export function installFakeBackend({
     'chats.messages': ({ chatId }: { chatId: string }) =>
       seed.messages.filter((message) => message.chatId === chatId),
     'bots.list': () => [...bots].sort((a, b) => a.name.localeCompare(b.name)),
-    'bots.create': (input: Pick<Bot, 'name' | 'soul' | 'model' | 'learns'>) => {
+    'bots.create': (
+      input: Pick<Bot, 'name' | 'soul' | 'model' | 'learns'> &
+        Partial<Pick<Bot, 'projectId' | 'avatar'>>
+    ) => {
       if (seed.botError) throw new Error(seed.botError)
-      const bot: Bot = { ...input, id: `bot-${nextId++}`, createdAt: 1, updatedAt: 1 }
+      const bot: Bot = {
+        projectId: null,
+        avatar: null,
+        ...input,
+        id: `bot-${nextId++}`,
+        createdAt: 1,
+        updatedAt: 1
+      }
       bots.push(bot)
       emit('bots.changed', { botId: bot.id })
       return bot

@@ -2,7 +2,7 @@ import { Ellipsis, Pencil, Plug, Trash2 } from 'lucide-react'
 import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react'
 import type { Chat, ChatMessage, ModelRef, PermissionMode } from '@shared/types'
 import { BotAvatar } from '../components/BotChip'
-import { ApprovalCard } from '../components/chat/ApprovalCard'
+import { ApprovalList } from '../components/chat/ApprovalList'
 import { MessageParts } from '../components/chat/MessageParts'
 import { Composer } from '../components/Composer'
 import { ChatUsage } from '../components/usage/ChatUsage'
@@ -51,7 +51,7 @@ function ChatHeader({ chat, running }: { chat: Chat; running: boolean }): ReactN
           aria-label={`Bot: ${bot.name}. Open its page`}
           onClick={() => navigate({ view: 'bot', botId: bot.id })}
         >
-          <BotAvatar name={bot.name} size="small" />
+          <BotAvatar name={bot.name} avatar={bot.avatar} size="small" />
           {bot.name}
         </button>
       )}
@@ -191,9 +191,7 @@ export function ChatScreen({ chat }: { chat: Chat }): ReactNode {
             </article>
           )}
 
-          {run.approvals.map((request) => (
-            <ApprovalCard key={request.id} request={request} />
-          ))}
+          <ApprovalList approvals={run.approvals} />
 
           {run.status === 'failed' && (
             <Banner tone="error" action={<Button onClick={retry}>Retry</Button>}>

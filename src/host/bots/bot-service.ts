@@ -1,6 +1,8 @@
 import { randomUUID } from 'node:crypto'
 import type { BotInput } from '@shared/rpc'
 import {
+  BOT_ICONS,
+  BOT_PICTURE_MAX_LENGTH,
   MEMORY_LIMITS,
   SOUL_LIMIT,
   type Bot,
@@ -21,6 +23,8 @@ interface BotRow {
   model_provider: string
   model_name: string
   learns: number
+  project_id: string | null
+  avatar: string | null
   created_at: number
   updated_at: number
 }
@@ -41,6 +45,8 @@ function toBot(row: BotRow): Bot {
     soul: row.soul,
     model: { provider: row.model_provider as ProviderId, model: row.model_name },
     learns: row.learns === 1,
+    projectId: row.project_id,
+    avatar: row.avatar,
     createdAt: row.created_at,
     updatedAt: row.updated_at
   }
@@ -78,6 +84,16 @@ function cleanSoul(soul: string): string {
     throw new Error(`The soul can be at most ${SOUL_LIMIT} characters.`)
   }
   return trimmed
+}
+
+const PICTURE_PREFIX = 'data:image/png;base64,'
+
+function checkAvatar(avatar: string | null): string | null {
+  if (avatar === null || (BOT_ICONS as readonly string[]).includes(avatar)) return avatar
+  if (!avatar.startsWith(PICTURE_PREFIX))
+    throw new Error('That is not a picture Gramatrix can use.')
+  if (avatar.length > BOT_PICTURE_MAX_LENGTH) throw new Error('That picture is too large.')
+  return avatar
 }
 
 function cleanEntry(content: string): string {
@@ -120,9 +136,8 @@ export class BotService {
     const id = randomUUID()
     this.context.db
       .prepare(
-        `INSERT INTO bots
-         (id, name, soul, model_provider, model_name, learns, created_at, updated_at)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
+        `INSERT INTO bots (id, name, soul, model_provider, model_name, learns, project_id, avatar,
+         created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
       )
       .run(
         id,
@@ -131,6 +146,8 @@ export class BotService {
         input.model.provider,
         input.model.model,
         input.learns ? 1 : 0,
+        input.projectId ?? null,
+        checkAvatar(input.avatar ?? null),
         now,
         now
       )
@@ -143,7 +160,7 @@ export class BotService {
     this.context.db
       .prepare(
         `UPDATE bots SET name = ?, soul = ?, model_provider = ?, model_name = ?, learns = ?,
-         updated_at = ? WHERE id = ?`
+         project_id = ?, avatar = ?, updated_at = ? WHERE id = ?`
       )
       .run(
         cleanName(next.name),
@@ -151,6 +168,8 @@ export class BotService {
         next.model.provider,
         next.model.model,
         next.learns ? 1 : 0,
+        next.projectId,
+        checkAvatar(next.avatar),
         this.context.now(),
         id
       )

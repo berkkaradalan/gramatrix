@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { MEMORY_LIMITS, SOUL_LIMIT } from '@shared/types'
+import { BOT_PICTURE_MAX_LENGTH, MEMORY_LIMITS, SOUL_LIMIT } from '@shared/types'
 import { createTestHost } from '../testing'
 
 const MODEL = { provider: 'openai', model: 'gpt' } as const
@@ -169,5 +169,50 @@ describe('memory the bot changes', () => {
       })
     ).toThrow('secret key')
     expect(bots.memories(bot.id).map(({ content }) => content)).toEqual(['Old note'])
+  })
+})
+
+describe('default project and picture', () => {
+  const PICTURE = 'data:image/png;base64,iVBORw0KGgo='
+
+  it('keeps the default project until that project is removed', () => {
+    const { bots, host } = setup()
+    const project = host.services.projects.add('/work/desktop')
+    const bot = bots.create({
+      name: 'Tidy',
+      soul: '',
+      model: MODEL,
+      learns: false,
+      projectId: project.id
+    })
+    expect(bot.projectId).toBe(project.id)
+
+    host.services.projects.remove(project.id)
+
+    expect(bots.get(bot.id).projectId).toBeNull()
+  })
+
+  it('starts without a project and without a picture', () => {
+    const { bot } = setup()
+    expect(bot).toMatchObject({ projectId: null, avatar: null })
+  })
+
+  it('accepts an icon that comes with the app and a small PNG picture', () => {
+    const { bots, bot } = setup()
+    expect(bots.update(bot.id, { avatar: 'rocket' }).avatar).toBe('rocket')
+    expect(bots.update(bot.id, { avatar: PICTURE }).avatar).toBe(PICTURE)
+    expect(bots.update(bot.id, { avatar: null }).avatar).toBeNull()
+  })
+
+  it('refuses unknown icons, other kinds of data and pictures that are too large', () => {
+    const { bots, bot } = setup()
+    expect(() => bots.update(bot.id, { avatar: 'dragon' })).toThrow('not a picture')
+    expect(() => bots.update(bot.id, { avatar: 'data:text/html;base64,PGI+' })).toThrow(
+      'not a picture'
+    )
+    expect(() =>
+      bots.update(bot.id, { avatar: PICTURE + 'A'.repeat(BOT_PICTURE_MAX_LENGTH) })
+    ).toThrow('too large')
+    expect(bots.get(bot.id).avatar).toBeNull()
   })
 })

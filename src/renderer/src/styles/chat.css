@@ -535,6 +535,23 @@
   overflow-wrap: anywhere;
 }
 
+/* Answers every waiting approval at once. Shown above the cards when two or more wait. */
+.approval-batch {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2) var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  background: var(--surface-solid);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+}
+
+.approval-batch p {
+  color: var(--muted);
+}
+
 /* The bot of a chat, in the header. Opens its page. */
 .bot-tag {
   border: none;

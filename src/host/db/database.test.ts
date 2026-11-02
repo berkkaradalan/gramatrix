@@ -10,6 +10,9 @@ import { MIGRATIONS } from './migrations'
 const CHAT_COLUMNS =
   '(id, project_id, title, model_provider, model_name, permission_mode, created_at, updated_at)'
 
+/** Named, because a later migration adds columns to bots. */
+const BOT_COLUMNS = '(id, name, soul, model_provider, model_name, learns, created_at, updated_at)'
+
 function databasePath(): string {
   return join(mkdtempSync(join(tmpdir(), 'gramatrix-db-')), 'test.db')
 }
@@ -172,7 +175,7 @@ describe('bots migration', () => {
   function databaseWithBot(): Database {
     const db = openDatabase(':memory:')
     db.exec(`
-      INSERT INTO bots VALUES ('b1', 'Ada', 'Curious', 'openai', 'gpt', 1, 1, 1);
+      INSERT INTO bots ${BOT_COLUMNS} VALUES ('b1', 'Ada', 'Curious', 'openai', 'gpt', 1, 1, 1);
       INSERT INTO bot_memories VALUES ('n1', 'b1', 'notes', 'Uses pnpm', 1, 1);
       INSERT INTO chats ${CHAT_COLUMNS} VALUES ('c1', NULL, 'Chat', 'openai', 'gpt', 'ask', 1, 1);
       UPDATE chats SET bot_id = 'b1' WHERE id = 'c1';
@@ -208,7 +211,7 @@ describe('channel and job bots migration', () => {
     createVersionTwoDatabase(path)
     const db = openDatabase(path)
     db.exec(`
-      INSERT INTO bots VALUES ('b1', 'Ada', 'Curious', 'openai', 'gpt', 1, 1, 1);
+      INSERT INTO bots ${BOT_COLUMNS} VALUES ('b1', 'Ada', 'Curious', 'openai', 'gpt', 1, 1, 1);
       INSERT INTO channels (kind, enabled, project_id, model_provider, model_name, permission_mode)
         VALUES ('telegram', 1, NULL, NULL, NULL, 'read-only');
       UPDATE channels SET bot_id = 'b1';

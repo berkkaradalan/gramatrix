@@ -175,9 +175,15 @@
   min-width: 0;
 }
 
-.field > label {
+.field > label,
+.field-label {
   font-size: var(--text-sm);
   font-weight: 500;
+}
+
+/* A chip inside a form keeps its own width instead of stretching like an input. */
+.field > .chip {
+  align-self: flex-start;
 }
 
 .input {

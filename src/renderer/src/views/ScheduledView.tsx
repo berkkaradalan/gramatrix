@@ -187,7 +187,7 @@ function JobDialog({
                   ...bots.map((bot) => ({
                     value: bot.id,
                     label: bot.name,
-                    icon: <BotAvatar name={bot.name} size="small" />
+                    icon: <BotAvatar name={bot.name} avatar={bot.avatar} size="small" />
                   }))
                 ]}
                 onChange={chooseBot}
@@ -315,7 +315,7 @@ function JobRow({ job, onEdit }: { job: Job; onEdit(): void }): ReactNode {
         </div>
         {bot && (
           <span className="project-tag">
-            <BotAvatar name={bot.name} size="small" />
+            <BotAvatar name={bot.name} avatar={bot.avatar} size="small" />
             {bot.name}
           </span>
         )}

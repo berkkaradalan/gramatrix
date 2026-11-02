@@ -3,6 +3,7 @@ import {
   ChevronLeft,
   Ellipsis,
   FolderOpen,
+  ImageUp,
   MessageSquare,
   Pencil,
   Plus,
@@ -11,8 +12,17 @@ import {
 } from 'lucide-react'
 import { useEffect, useState, type ReactNode } from 'react'
 import type { BotInput } from '@shared/rpc'
-import { SOUL_LIMIT, type Bot, type BotMemory, type MemoryKind, type ModelRef } from '@shared/types'
+import {
+  BOT_ICONS,
+  SOUL_LIMIT,
+  type Bot,
+  type BotMemory,
+  type MemoryKind,
+  type ModelRef
+} from '@shared/types'
+import { BOT_ICON_DETAILS, isBotPicture } from '../components/bot-icons'
 import { BotAvatar } from '../components/BotChip'
+import { ProjectChip } from '../components/ProjectChip'
 import { findModel, ModelPicker } from '../components/ModelPicker'
 import {
   Banner,
@@ -49,6 +59,78 @@ const NUMBER = new Intl.NumberFormat('en-US')
 const LEARN_HINT =
   'Now and then the bot reviews its chats and updates its memory. This uses tokens from your key.'
 
+/**
+ * Chooses how a bot looks: the first letter of its name, an icon that comes with the app, or a
+ * picture from the computer.
+ */
+function PictureChooser({
+  name,
+  avatar,
+  onChange,
+  onError
+}: {
+  name: string
+  avatar: string | null
+  onChange(avatar: string | null): void
+  onError(message: string): void
+}): ReactNode {
+  const [picking, setPicking] = useState(false)
+
+  const upload = async (): Promise<void> => {
+    setPicking(true)
+    try {
+      const picture = await invoke('app.pickBotPicture', undefined)
+      if (picture) onChange(picture)
+    } catch (caught) {
+      onError(errorMessage(caught))
+    } finally {
+      setPicking(false)
+    }
+  }
+
+  const option = (value: string | null, label: string, content: ReactNode): ReactNode => (
+    <button
+      key={value ?? 'letter'}
+      type="button"
+      className="avatar-option"
+      aria-label={label}
+      aria-pressed={avatar === value}
+      title={label}
+      onClick={() => onChange(value)}
+    >
+      {content}
+    </button>
+  )
+
+  return (
+    <div className="field">
+      <span className="field-label" id="bot-picture-label">
+        Picture
+      </span>
+      <div className="avatar-options" role="group" aria-labelledby="bot-picture-label">
+        {option(null, 'Initial letter', <BotAvatar name={name || '?'} />)}
+        {BOT_ICONS.map((icon) =>
+          option(icon, BOT_ICON_DETAILS[icon].label, <BotAvatar name={name} avatar={icon} />)
+        )}
+        {avatar !== null &&
+          isBotPicture(avatar) &&
+          option(avatar, 'Your picture', <BotAvatar name={name} avatar={avatar} />)}
+        <button
+          type="button"
+          className="avatar-option avatar-upload"
+          aria-label="Use a picture from your computer"
+          title="Use a picture from your computer"
+          disabled={picking}
+          onClick={() => void upload()}
+        >
+          <ImageUp size={16} aria-hidden />
+        </button>
+      </div>
+      <p className="hint">Pick an icon, or use a PNG or JPEG. Pictures are cropped to a square.</p>
+    </div>
+  )
+}
+
 function BotDialog({
   open,
   bot,
@@ -65,6 +147,8 @@ function BotDialog({
   const [soul, setSoul] = useState('')
   const [model, setModel] = useState<ModelRef | null>(null)
   const [learns, setLearns] = useState(false)
+  const [projectId, setProjectId] = useState<string | null>(null)
+  const [avatar, setAvatar] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
 
@@ -74,6 +158,8 @@ function BotDialog({
     setSoul(bot?.soul ?? '')
     setModel(bot?.model ?? resolveDefaultModel(settings, providers))
     setLearns(bot?.learns ?? false)
+    setProjectId(bot?.projectId ?? null)
+    setAvatar(bot?.avatar ?? null)
     setError(null)
     // Only opening resets the form. Later changes to settings must not wipe what was typed.
   }, [open, bot])
@@ -84,7 +170,14 @@ function BotDialog({
 
   const save = async (): Promise<void> => {
     if (!canSave || !model) return
-    const input: BotInput = { name: name.trim(), soul: soul.trim(), model, learns }
+    const input: BotInput = {
+      name: name.trim(),
+      soul: soul.trim(),
+      model,
+      learns,
+      projectId,
+      avatar
+    }
     setBusy(true)
     setError(null)
     try {
@@ -164,8 +257,15 @@ function BotDialog({
             />
           )}
         </Field>
+        <PictureChooser name={name} avatar={avatar} onChange={setAvatar} onError={setError} />
         <Field label="Model" hint="New chats with this bot start with this model.">
           {(id) => <ModelPicker id={id} block value={model} onChange={setModel} />}
+        </Field>
+        <Field
+          label="Default project"
+          hint="New chats with this bot start in this folder. You can change the folder of any chat."
+        >
+          {(id) => <ProjectChip id={id} projectId={projectId} onChange={setProjectId} />}
         </Field>
         <Switch label="Learn from chats" hint={LEARN_HINT} checked={learns} onChange={setLearns} />
         {error && <Banner tone="error">{error}</Banner>}
@@ -223,7 +323,7 @@ function BotRow({ bot, onEdit }: { bot: Bot; onEdit(): void }): ReactNode {
     <li>
       <div className="list-row">
         <button type="button" className="bot-row-open" onClick={open}>
-          <BotAvatar name={bot.name} />
+          <BotAvatar name={bot.name} avatar={bot.avatar} />
           <span className="list-row-main">
             <span className="bot-row-name">{bot.name}</span>
             <span className="bot-row-soul muted">{soulPreview(bot.soul) || 'No soul yet'}</span>
@@ -233,7 +333,7 @@ function BotRow({ bot, onEdit }: { bot: Bot; onEdit(): void }): ReactNode {
         <IconButton
           icon={SquarePen}
           label={`New chat with ${bot.name}`}
-          onClick={() => newChat(null, bot.id)}
+          onClick={() => newChat(bot.projectId, bot.id)}
         />
         <Menu
           actions={[
@@ -565,7 +665,7 @@ function BotChats({ bot }: { bot: Bot }): ReactNode {
           icon={MessageSquare}
           title="No chats yet"
           action={
-            <Button icon={SquarePen} onClick={() => newChat(null, bot.id)}>
+            <Button icon={SquarePen} onClick={() => newChat(bot.projectId, bot.id)}>
               Start a chat
             </Button>
           }
@@ -608,6 +708,8 @@ export function BotView({ bot }: { bot: Bot }): ReactNode {
   const [editing, setEditing] = useState(false)
   const remove = useDeleteBot(bot)
   const modelName = useModelName(bot.model)
+  const { projects } = useApp()
+  const project = projects.find(({ id }) => id === bot.projectId)
 
   const setLearns = (learns: boolean): Promise<unknown> =>
     run(() => invoke('bots.update', { id: bot.id, patch: { learns } }))
@@ -625,17 +727,24 @@ export function BotView({ bot }: { bot: Bot }): ReactNode {
         </button>
         <header className="page-header">
           <div className="bot-title">
-            <BotAvatar name={bot.name} size="large" />
+            <BotAvatar name={bot.name} avatar={bot.avatar} size="large" />
             <div>
               <h1>{bot.name}</h1>
-              <p className="muted">{modelName}</p>
+              <p className="muted">
+                {modelName}
+                {project && <> &middot; starts in {project.name}</>}
+              </p>
             </div>
           </div>
           <div className="row row-nowrap">
             <Button icon={Pencil} onClick={() => setEditing(true)}>
               Edit
             </Button>
-            <Button variant="primary" icon={SquarePen} onClick={() => newChat(null, bot.id)}>
+            <Button
+              variant="primary"
+              icon={SquarePen}
+              onClick={() => newChat(bot.projectId, bot.id)}
+            >
               New chat
             </Button>
             <Menu

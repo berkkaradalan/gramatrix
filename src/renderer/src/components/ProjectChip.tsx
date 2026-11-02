@@ -27,11 +27,14 @@ export function ProjectChip({
   projectId,
   onChange,
   className = 'chip',
-  disabled = false
+  disabled = false,
+  id
 }: {
   projectId: string | null
   onChange(projectId: string | null): void
   className?: string
+  /** Lets a form label point at the button. */
+  id?: string
   /** Set while a reply is running, which keeps the folder it started with. */
   disabled?: boolean
 }): ReactNode {
@@ -43,6 +46,7 @@ export function ProjectChip({
     <RadixMenu.Root>
       <RadixMenu.Trigger asChild>
         <button
+          id={id}
           type="button"
           className={className}
           title={project?.path ?? 'Choose a project folder to give this chat file access'}

@@ -85,6 +85,12 @@ When the answer is `ask`, an interactive run emits `approval-requested` and wait
 `agent.resolveApproval`. A headless run has nobody to ask, so it denies the action. A denied call
 returns a message to the model, and the run continues.
 
+The model can ask for several tool calls in one step, so several approvals can wait at once. The
+renderer shows one card per request and, from two waiting requests up, an Approve all bar
+(`ApprovalList.tsx`). The bar sends one `agent.resolveApproval` per request shown at the click,
+so the host needs no batch method. Answered requests stay disabled until `approval-resolved`
+arrives, because resolving a request twice is an error.
+
 ## Commands
 
 Each command runs in its own process group with `GRAMATRIX_COMMAND` in its environment.

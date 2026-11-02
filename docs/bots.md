@@ -13,7 +13,12 @@ Open **Bots** in the sidebar and create one. A bot has:
   example: "You are calm and direct. Answer in Turkish unless I write in English. Point out risks
   before you change anything." The soul goes into every request, so keep it short. It can be at
   most 4,000 characters.
+- **A picture.** The first letter of its name, one of the icons that come with Gramatrix, or a PNG
+  or JPEG from your computer. A picture is cropped to a square, shrunk and kept with the bot.
 - **A model.** New chats with the bot start with it. You can still change the model of a chat.
+- **A default project, if you want one.** New chats with the bot start in that folder, which suits
+  a bot made for one place, such as a bot that tidies your desktop. Leave it empty for a bot you
+  use everywhere. Removing the project from Gramatrix clears it.
 - **Learn from chats.** When this is on, the bot reviews its chats now and then to update its
   memory. See [How a bot learns](#how-a-bot-learns).
 

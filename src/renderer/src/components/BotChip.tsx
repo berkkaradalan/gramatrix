@@ -2,19 +2,37 @@ import * as RadixMenu from '@radix-ui/react-dropdown-menu'
 import { Bot as BotIcon, Check, ChevronDown, Plus, Settings2, Sparkles } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { botInitial, soulPreview } from '../lib/bots'
+import { BOT_ICON_DETAILS, isBotIcon, isBotPicture } from './bot-icons'
 import { useApp } from '../state/app-context'
 import { useNavigation } from '../state/navigation'
 
-/** A round letter that stands for a bot wherever it appears. */
+/**
+ * Stands for a bot wherever it appears: its picture, one of the icons that come with the app, or
+ * the first letter of its name.
+ */
 export function BotAvatar({
   name,
+  avatar = null,
   size = 'medium'
 }: {
   name: string
+  avatar?: string | null
   size?: 'small' | 'medium' | 'large'
 }): ReactNode {
+  const className = `bot-avatar bot-avatar-${size}`
+  if (avatar !== null && isBotPicture(avatar)) {
+    return <img className={`${className} bot-avatar-picture`} src={avatar} alt="" aria-hidden />
+  }
+  if (isBotIcon(avatar)) {
+    const { icon: Icon } = BOT_ICON_DETAILS[avatar]
+    return (
+      <span className={`${className} bot-avatar-icon`} aria-hidden>
+        <Icon />
+      </span>
+    )
+  }
   return (
-    <span className={`bot-avatar bot-avatar-${size}`} aria-hidden>
+    <span className={className} aria-hidden>
       {botInitial(name)}
     </span>
   )
@@ -36,7 +54,11 @@ export function BotChip({
     <RadixMenu.Root>
       <RadixMenu.Trigger asChild>
         <button type="button" className="chip" aria-label={`Bot: ${bot?.name ?? 'No bot'}`}>
-          {bot ? <BotAvatar name={bot.name} size="small" /> : <BotIcon size={14} aria-hidden />}
+          {bot ? (
+            <BotAvatar name={bot.name} avatar={bot.avatar} size="small" />
+          ) : (
+            <BotIcon size={14} aria-hidden />
+          )}
           <span className="chip-label">{bot?.name ?? 'No bot'}</span>
           <ChevronDown size={13} aria-hidden />
         </button>
@@ -58,7 +80,7 @@ export function BotChip({
               className="menu-item"
               onSelect={() => onChange(candidate.id)}
             >
-              <BotAvatar name={candidate.name} size="small" />
+              <BotAvatar name={candidate.name} avatar={candidate.avatar} size="small" />
               <span className="menu-item-text">
                 {candidate.name}
                 <span className="menu-item-hint">

@@ -289,7 +289,7 @@ function SetupDialog({
                   ...bots.map((bot) => ({
                     value: bot.id,
                     label: bot.name,
-                    icon: <BotAvatar name={bot.name} size="small" />
+                    icon: <BotAvatar name={bot.name} avatar={bot.avatar} size="small" />
                   }))
                 ]}
                 onChange={(value) => void chooseBot(value)}

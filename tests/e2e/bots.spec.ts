@@ -42,7 +42,9 @@ test('creates a bot with the default model and opens its page', async () => {
       name: 'Ada',
       soul: 'You are calm and direct.',
       model: { provider: 'anthropic', model: 'claude-sonnet' },
-      learns: true
+      learns: true,
+      projectId: null,
+      avatar: null
     })
   await expect(page.getByRole('heading', { name: 'Ada', level: 1 })).toBeVisible()
   await expect(page.getByRole('switch', { name: 'Learn from chats' })).toBeChecked()
@@ -193,6 +195,86 @@ test('picks a bot from the Home composer', async () => {
   await close()
 })
 
+/** A one pixel PNG, standing in for a picture the user picked. */
+const PICTURE =
+  'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=='
+const DESKTOP_BOT = { ...BOT, projectId: 'p1', avatar: 'rocket' }
+
+test('a new bot can get an icon and a default project', async () => {
+  const { page, close } = await launchWithFakeBackend(SHELL_SEED)
+  await page.getByRole('button', { name: 'Bots' }).click()
+  await page.getByRole('button', { name: 'New bot' }).click()
+  const dialog = page.getByRole('dialog', { name: 'New bot' })
+  await dialog.getByLabel('Name').fill('Tidy')
+  await dialog.getByRole('button', { name: 'Rocket' }).click()
+  await expect(dialog.getByRole('button', { name: 'Rocket' })).toHaveAttribute(
+    'aria-pressed',
+    'true'
+  )
+  await dialog.getByRole('button', { name: 'Project: No project' }).click()
+  await page.getByRole('menuitem', { name: /^gramatrix/ }).click()
+  await dialog.getByRole('button', { name: 'Create bot' }).click()
+
+  await expect
+    .poll(() => recordedParams(page, 'bots.create'))
+    .toMatchObject({ name: 'Tidy', avatar: 'rocket', projectId: 'p1' })
+  await expect(page.getByText(/starts in gramatrix/)).toBeVisible()
+  await close()
+})
+
+test('a picture from the computer becomes the bot picture', async () => {
+  const { page, close } = await launchWithFakeBackend({ ...BOT_SEED, botPicture: PICTURE })
+  await page.getByRole('button', { name: 'Bots' }).click()
+  await page.getByRole('main').getByRole('button', { name: /^Ada/ }).click()
+  await page.getByRole('button', { name: 'Edit', exact: true }).click()
+  const dialog = page.getByRole('dialog', { name: 'Edit Ada' })
+  await dialog.getByRole('button', { name: 'Use a picture from your computer' }).click()
+  await expect(dialog.getByRole('button', { name: 'Your picture' })).toHaveAttribute(
+    'aria-pressed',
+    'true'
+  )
+  await dialog.getByRole('button', { name: 'Save changes' }).click()
+
+  await expect
+    .poll(() => recordedParams(page, 'bots.update'))
+    .toMatchObject({ id: BOT.id, patch: { avatar: PICTURE } })
+  await expect(page.locator('.bot-title img.bot-avatar-picture')).toHaveAttribute('src', PICTURE)
+  await close()
+})
+
+test('picking a bot on Home starts the chat in its default project', async () => {
+  const { page, close } = await launchWithFakeBackend({ ...BOT_SEED, bots: [DESKTOP_BOT] })
+  await page.getByRole('button', { name: 'Bot: No bot' }).click()
+  await page.getByRole('menuitem', { name: /^Ada/ }).click()
+  await expect(page.getByRole('button', { name: 'Project: gramatrix' })).toBeVisible()
+  await page.getByRole('textbox', { name: 'Message' }).fill('Tidy up')
+  await page.getByRole('textbox', { name: 'Message' }).press('Enter')
+  await expect
+    .poll(() => recordedParams(page, 'chats.create'))
+    .toMatchObject({ botId: BOT.id, projectId: 'p1' })
+  await close()
+})
+
+test('a project chosen on Home stays when a bot is picked', async () => {
+  const { page, close } = await launchWithFakeBackend({ ...BOT_SEED, bots: [DESKTOP_BOT] })
+  await page.getByRole('button', { name: 'Project: No project' }).click()
+  await page.getByRole('menuitem', { name: /^payments-service/ }).click()
+  await page.getByRole('button', { name: 'Bot: No bot' }).click()
+  await page.getByRole('menuitem', { name: /^Ada/ }).click()
+  await expect(page.getByRole('button', { name: 'Project: payments-service' })).toBeVisible()
+  await close()
+})
+
+test('New chat on the bot page starts in its default project', async () => {
+  const { page, close } = await launchWithFakeBackend({ ...BOT_SEED, bots: [DESKTOP_BOT] })
+  await page.getByRole('button', { name: 'Bots' }).click()
+  await page.getByRole('main').getByRole('button', { name: /^Ada/ }).click()
+  await page.getByRole('main').getByRole('button', { name: 'New chat', exact: true }).click()
+  await expect(page.getByRole('button', { name: 'Project: gramatrix' })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Bot: Ada' })).toBeVisible()
+  await close()
+})
+
 test('without bots the composer chip offers to create one', async () => {
   const { page, close } = await launchWithFakeBackend(SHELL_SEED)
   await page.getByRole('button', { name: 'Bot: No bot' }).click()
@@ -268,6 +350,14 @@ test('bots screenshots', async () => {
   await page.getByRole('button', { name: 'Edit', exact: true }).click()
   await animationsDone(page)
   await page.screenshot({ path: join(folder, 'bot-edit.png') })
+  await page.getByRole('dialog').getByRole('button', { name: 'Rocket' }).click()
+  await animationsDone(page)
+  await page
+    .getByRole('dialog')
+    .locator('.dialog-body, form')
+    .first()
+    .evaluate((element) => element.scrollTo(0, 400))
+  await page.screenshot({ path: join(folder, 'bot-edit-picture.png') })
   await page.keyboard.press('Escape')
   await page.getByRole('button', { name: BOT_ROW }).click()
   await page.screenshot({ path: join(folder, 'bot-chat.png') })

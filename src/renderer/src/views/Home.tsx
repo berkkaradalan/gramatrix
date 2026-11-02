@@ -43,6 +43,8 @@ export function Home({
   const { openProviders } = useOverlays()
   const [text, setText] = useState('')
   const [projectId, setProjectId] = useState(initialProjectId)
+  // A bot brings its default project, unless a project was already chosen for this chat.
+  const [projectChosen, setProjectChosen] = useState(initialProjectId !== null)
   const [botId, setBotId] = useState(initialBotId)
   // A bot brings its own model. Picking another model afterwards still wins.
   const [pickedModel, setPickedModel] = useState<ModelRef | null>(
@@ -54,12 +56,20 @@ export function Home({
 
   useEffect(() => {
     setProjectId(initialProjectId)
+    setProjectChosen(initialProjectId !== null)
     input.current?.focus()
   }, [initialProjectId])
 
+  const chooseProject = (id: string | null): void => {
+    setProjectId(id)
+    setProjectChosen(true)
+  }
+
   const chooseBot = (id: string | null): void => {
+    const chosen = bots.find((candidate) => candidate.id === id)
     setBotId(id)
-    setPickedModel(bots.find((candidate) => candidate.id === id)?.model ?? null)
+    setPickedModel(chosen?.model ?? null)
+    if (!projectChosen) setProjectId(chosen?.projectId ?? null)
   }
 
   // Coming back to Home from elsewhere starts with the bot the route asks for, like the project.
@@ -122,7 +132,7 @@ export function Home({
                 : 'Ask anything, or describe a task'
           }
         >
-          <ProjectChip projectId={projectId} onChange={setProjectId} />
+          <ProjectChip projectId={projectId} onChange={chooseProject} />
           <BotChip botId={bot?.id ?? null} onChange={chooseBot} />
           {connected ? (
             <ModelPicker value={model} onChange={setPickedModel} />

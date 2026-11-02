@@ -853,6 +853,61 @@
   line-height: 1;
 }
 
+.bot-avatar-icon {
+  background: var(--bg);
+  border-color: color-mix(in srgb, var(--accent) 40%, transparent);
+  color: var(--accent);
+}
+
+.bot-avatar-icon svg {
+  width: 58%;
+  height: 58%;
+}
+
+.bot-avatar-picture {
+  object-fit: cover;
+  padding: 0;
+}
+
+.avatar-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.avatar-option {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  background: none;
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  color: var(--muted);
+  cursor: pointer;
+  transition:
+    border-color var(--transition),
+    background var(--transition);
+}
+
+.avatar-option:hover {
+  background: var(--surface-hover);
+}
+
+.avatar-option[aria-pressed='true'] {
+  border-color: var(--accent);
+}
+
+.avatar-upload {
+  border: 1px dashed var(--border-strong);
+}
+
+.avatar-upload:hover {
+  color: var(--text);
+}
+
 .bot-avatar-small {
   width: 18px;
   height: 18px;

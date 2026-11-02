@@ -44,7 +44,8 @@ export type JobInput = Pick<
   | 'botId'
 >
 
-export type BotInput = Pick<Bot, 'name' | 'soul' | 'model' | 'learns'>
+export type BotInput = Pick<Bot, 'name' | 'soul' | 'model' | 'learns'> &
+  Partial<Pick<Bot, 'projectId' | 'avatar'>>
 
 export interface ChannelConfigInput {
   kind: ChannelKind
@@ -66,6 +67,11 @@ export interface RpcMethods {
   'app.openExternal': { params: { url: string }; result: void }
   /** Copies a video the user picks into app data. Returns its file name, null when cancelled. */
   'app.pickBackgroundVideo': { params: void; result: string | null }
+  /**
+   * Lets the user pick a picture for a bot. Returns it cropped to a small square as a PNG data
+   * URL, or null when cancelled.
+   */
+  'app.pickBotPicture': { params: void; result: string | null }
 
   'secrets.set': { params: { name: string; value: string }; result: void }
   'secrets.delete': { params: { name: string }; result: void }
@@ -169,6 +175,7 @@ export const MAIN_METHODS = [
   'app.pickDirectory',
   'app.openExternal',
   'app.pickBackgroundVideo',
+  'app.pickBotPicture',
   'secrets.set',
   'secrets.delete',
   'secrets.has',

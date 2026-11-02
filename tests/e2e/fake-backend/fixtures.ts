@@ -269,6 +269,8 @@ export const BOT: Bot = {
   soul: 'You are calm and direct.\nAnswer briefly and point out risks before you change anything.',
   model: { provider: 'anthropic', model: 'claude-opus' },
   learns: true,
+  projectId: null,
+  avatar: null,
   createdAt: 1,
   updatedAt: 1
 }

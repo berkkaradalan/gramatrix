@@ -3,7 +3,6 @@ import type { ReactNode } from 'react'
 import type { ApprovalRequest } from '@shared/types'
 import { formatJson } from '../../lib/format'
 import { languageFromPath } from '../../lib/languages'
-import { invoke, useAction } from '../../state/hooks'
 import { CodeView } from '../code/CodeView'
 import { Button } from '../ui'
 import { DiffView } from './DiffView'
@@ -38,11 +37,16 @@ function Preview({ request }: { request: ApprovalRequest }): ReactNode {
   return <CodeView className="approval-preview" code={formatJson(input)} language="json" />
 }
 
-export function ApprovalCard({ request }: { request: ApprovalRequest }): ReactNode {
-  const { busy, run } = useAction()
-  const resolve = (approved: boolean): Promise<unknown> =>
-    run(() => invoke('agent.resolveApproval', { requestId: request.id, approved }))
-
+export function ApprovalCard({
+  request,
+  answering,
+  onAnswer
+}: {
+  request: ApprovalRequest
+  /** True while an answer for this request is on its way, so it cannot be sent twice. */
+  answering: boolean
+  onAnswer(approved: boolean): void
+}): ReactNode {
   return (
     <section className="approval" aria-label={`Approval needed for ${request.toolName}`}>
       <header>
@@ -51,10 +55,10 @@ export function ApprovalCard({ request }: { request: ApprovalRequest }): ReactNo
       </header>
       <Preview request={request} />
       <div className="row">
-        <Button variant="primary" icon={Check} disabled={busy} onClick={() => void resolve(true)}>
+        <Button variant="primary" icon={Check} disabled={answering} onClick={() => onAnswer(true)}>
           Approve
         </Button>
-        <Button icon={X} disabled={busy} onClick={() => void resolve(false)}>
+        <Button icon={X} disabled={answering} onClick={() => onAnswer(false)}>
           Deny
         </Button>
       </div>

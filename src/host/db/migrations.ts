@@ -171,5 +171,10 @@ export const MIGRATIONS: readonly string[] = [
   // its memory there, also when the chat is continued in the app. Unknown counts as shared.
   `
   ALTER TABLE channel_chats ADD COLUMN is_direct INTEGER NOT NULL DEFAULT 0;
+  `,
+  // Where new chats with a bot start, and its picture. Deleting the project keeps the bot.
+  `
+  ALTER TABLE bots ADD COLUMN project_id TEXT REFERENCES projects(id) ON DELETE SET NULL;
+  ALTER TABLE bots ADD COLUMN avatar TEXT;
   `
 ]

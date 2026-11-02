@@ -133,7 +133,9 @@ fails, **Retry** runs the last message again.
 | Full access  | Yes         | Yes         | Yes           |
 
 When the agent needs approval, a card shows the exact command or a diff of the edit, with
-**Approve** and **Deny**.
+**Approve** and **Deny**. When the agent asks for two or more actions at the same time, a bar above
+the cards offers **Approve all** and **Deny all**. It answers only the cards on screen when you
+click; an action that arrives later gets its own card. Read each card before you approve them all.
 
 ## Bots
 
@@ -143,8 +145,13 @@ and how it should behave, and a model. The counter under the soul shows how much
 characters you used. Turn on **Learn from chats** to let the bot review its chats now and then to
 update its memory. Those reviews use tokens from your key.
 
-To talk to a bot, choose **New chat** on its page, or pick it with the bot chip on Home. The chat
-header shows the bot's name. Click it to open the bot's page.
+Under **Picture**, keep the first letter of the name, pick one of the icons, or use a PNG or JPEG
+from your computer, which is cropped to a square. A **Default project** is optional: new chats with
+the bot start in that folder.
+
+To talk to a bot, choose **New chat** on its page, or pick it with the bot chip on Home. Picking a
+bot on Home also picks its default project, unless you already chose one. The chat header shows the
+bot's name. Click it to open the bot's page.
 
 The page of a bot shows its memory in two groups. **About you** holds what it knows about you and
 **Notes** holds everything else. Each group shows how many characters it uses of its limit. Hover

@@ -318,6 +318,26 @@ export const MEMORY_LIMITS: Record<MemoryKind, number> = { notes: 2200, user: 13
 /** Longest soul text. It is part of every request, like memory. */
 export const SOUL_LIMIT = 4000
 
+/** Pictures that come with the app, by name. The renderer draws each one as an icon. */
+export const BOT_ICONS = [
+  'bot',
+  'terminal',
+  'cpu',
+  'brain',
+  'shield',
+  'folder',
+  'rocket',
+  'ghost',
+  'sparkles',
+  'book',
+  'bug',
+  'globe'
+] as const
+export type BotIcon = (typeof BOT_ICONS)[number]
+
+/** Longest picture a bot can keep: a small PNG data URL, stored with the bot. */
+export const BOT_PICTURE_MAX_LENGTH = 150_000
+
 /** An agent with its own personality and a memory that lasts between chats. */
 export interface Bot {
   id: string
@@ -326,6 +346,13 @@ export interface Bot {
   soul: string
   /** Model for new chats with this bot. */
   model: ModelRef
+  /** Project new chats with this bot start in. Null starts them without one. */
+  projectId: string | null
+  /**
+   * A `BotIcon` name, a PNG data URL of a picture the user chose, or null for the first letter of
+   * the name.
+   */
+  avatar: string | null
   /** Whether the bot reviews its chats on its own to update its memory. */
   learns: boolean
   createdAt: number

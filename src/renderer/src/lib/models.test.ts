@@ -4,6 +4,7 @@ import {
   formatContext,
   formatPrice,
   pushRecentModel,
+  looksLikeModelId,
   searchModels,
   shortModelName,
   toggleModel
@@ -89,5 +90,36 @@ describe('searchModels', () => {
 
   it('searches ids', () => {
     expect(searchModels(models, 'y/').map(({ id }) => id)).toEqual(['y/claude'])
+  })
+
+  it('finds every model of a provider by its name, written any way', () => {
+    const glm = [model('glm-5.3', 'GLM 5.3'), model('glm-5.3-flash', 'GLM 5.3 Flash')]
+    const plan = { id: 'zai-coding-plan', label: 'Z.ai Coding Plan' }
+    for (const query of ['zai', 'Z.ai', 'z-ai', 'coding plan']) {
+      expect(searchModels(glm, query, plan)).toHaveLength(2)
+    }
+    expect(searchModels(glm, 'zai')).toEqual([])
+  })
+
+  it('finds OpenRouter models whose id spells the vendor with a hyphen', () => {
+    const router = [model('z-ai/glm-5', 'Z.ai: GLM 5'), model('openai/gpt-5', 'OpenAI: GPT-5')]
+    const openRouter = { id: 'openrouter', label: 'OpenRouter' }
+    expect(searchModels(router, 'zai', openRouter).map(({ id }) => id)).toEqual(['z-ai/glm-5'])
+  })
+
+  it('combines a provider word with a model word', () => {
+    const glm = [model('glm-5.3', 'GLM 5.3'), model('glm-5.3-flash', 'GLM 5.3 Flash')]
+    const plan = { id: 'zai-coding-plan', label: 'Z.ai Coding Plan' }
+    expect(searchModels(glm, 'zai flash', plan).map(({ id }) => id)).toEqual(['glm-5.3-flash'])
+  })
+})
+
+describe('looksLikeModelId', () => {
+  it.each(['glm-5.3', 'x-ai/grok-5', 'gpt5', 'model:latest'])('treats %s as an id', (query) => {
+    expect(looksLikeModelId(query)).toBe(true)
+  })
+
+  it.each(['zai', 'z.ai', 'z-ai', 'claude', 'fast model'])('treats %s as a search', (query) => {
+    expect(looksLikeModelId(query)).toBe(false)
   })
 })

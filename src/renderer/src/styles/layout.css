@@ -351,10 +351,46 @@
   padding-bottom: 8vh;
 }
 
-.home-column h1 {
-  font-size: var(--text-2xl);
-  font-weight: 550;
+/* Monospaced, so the line keeps its width while random glyphs settle into the text. */
+.decoding-heading {
+  font-family: var(--font-mono);
+  font-size: clamp(2rem, 3.6vw, 2.75rem);
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  line-height: 1.15;
   text-align: center;
+  text-wrap: balance;
+}
+
+.decoding-glyph {
+  color: var(--accent);
+  opacity: 0.75;
+}
+
+.decoding-cursor {
+  display: inline-block;
+  width: 0.55ch;
+  height: 0.9em;
+  margin-left: 0.2ch;
+  background: var(--accent);
+  vertical-align: -0.08em;
+  animation: decoding-cursor-blink 1.1s steps(1) infinite;
+}
+
+@keyframes decoding-cursor-blink {
+  50% {
+    opacity: 0;
+  }
+}
+
+[data-motion='reduce'] .decoding-cursor {
+  animation: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .decoding-cursor {
+    animation: none;
+  }
 }
 
 .starters {

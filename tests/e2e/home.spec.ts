@@ -55,3 +55,24 @@ test('Shift Enter makes a new line instead of sending', async () => {
   await expect.poll(() => recordedParams(page, 'chats.create')).toBeUndefined()
   await close()
 })
+
+test('the Home heading decodes into its text and ends on a cursor', async () => {
+  const { page, close } = await launchWithFakeBackend(SHELL_SEED)
+  const heading = page.getByRole('heading', { name: 'What should we work on?' })
+  await expect(heading).toHaveText('What should we work on?')
+  await expect(heading.locator('.decoding-glyph')).toHaveCount(0)
+  await expect(heading.locator('.decoding-cursor')).toBeVisible()
+  await close()
+})
+
+test('with reduced motion the Home heading shows its text at once', async () => {
+  const { page, close } = await launchWithFakeBackend({
+    ...SHELL_SEED,
+    settings: { ...SHELL_SEED.settings, reduceMotion: true }
+  })
+  const heading = page.getByRole('heading', { name: 'What should we work on?' })
+  await expect(heading).toBeVisible()
+  // Read straight away, without retrying, so a single scrambled frame would fail the test.
+  expect(await heading.textContent()).toBe('What should we work on?')
+  await close()
+})

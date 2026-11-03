@@ -80,6 +80,8 @@ Each row shows the context size and the price per million tokens for input and o
 - A wrench with a slash means the model has no tool support, so it cannot edit files or run
   commands.
 - **Saved list** means the live list could not be reached. **Refresh** tries again.
+- Search matches model names, ids and providers, so `zai` lists every Z.ai model, from Z.ai itself
+  and from OpenRouter. Dots and dashes do not matter: `zai`, `z.ai` and `z-ai` find the same.
 - To use a model that is not listed, type its id and choose **Use ... with ...**.
 
 Set your default model and manage favorites in **Settings > Models**.

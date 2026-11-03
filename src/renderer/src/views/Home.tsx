@@ -5,6 +5,7 @@ import { BotChip } from '../components/BotChip'
 import { Composer } from '../components/Composer'
 import { ModelPicker } from '../components/ModelPicker'
 import { PermissionControl } from '../components/PermissionControl'
+import { DecodingHeading } from '../components/DecodingHeading'
 import { ProjectChip } from '../components/ProjectChip'
 import { resolveDefaultModel, useApp } from '../state/app-context'
 import { invoke, useAction } from '../state/hooks'
@@ -115,7 +116,7 @@ export function Home({
   return (
     <div className="home">
       <div className="home-column">
-        <h1>{bot ? `Chat with ${bot.name}` : 'What should we work on?'}</h1>
+        <DecodingHeading text={bot ? `Chat with ${bot.name}` : 'What should we work on?'} />
         <Composer
           ref={input}
           large

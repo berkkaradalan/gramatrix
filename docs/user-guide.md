@@ -40,7 +40,11 @@ send, so there is no separate new chat step.
 The composer holds everything you need for that chat:
 
 - **Project chip.** Defaults to **No project**, which is a general chat with no file access. Choose
-  a project, or add one from the same menu, to let the agent work in that folder.
+  a project, or add one from the same menu, to let the agent work in that folder. A chat that
+  started without a project can get one later from the same button at the top of the chat, and
+  the conversation continues there.
+- **Bot chip.** Defaults to **No bot**, a plain Gramatrix chat. Pick a bot to talk to it instead.
+  The chat then starts with the bot's model.
 - **Model picker.** Changes the model for this chat.
 - **Permissions.** Appears once a project is selected.
 
@@ -79,6 +83,8 @@ Each row shows the context size and the price per million tokens for input and o
 - A wrench with a slash means the model has no tool support, so it cannot edit files or run
   commands.
 - **Saved list** means the live list could not be reached. **Refresh** tries again.
+- Search matches model names, ids and providers, so `zai` lists every Z.ai model, from Z.ai itself
+  and from OpenRouter. Dots and dashes do not matter: `zai`, `z.ai` and `z-ai` find the same.
 - To use a model that is not listed, type its id and choose **Use ... with ...**.
 
 Set your default model and manage favorites in **Settings > Models**.
@@ -89,6 +95,7 @@ Set your default model and manage favorites in **Settings > Models**.
 | --------- | ---------------------------------------------------------------------- |
 | New chat  | Opens Home.                                                            |
 | Search    | Finds chats and projects and jumps to any screen.                      |
+| Bots      | Your bots, their memory and their chats.                               |
 | Scheduled | Lists jobs across all projects.                                        |
 | Channels  | Connects Telegram and Slack.                                           |
 | Projects  | Each project expands to its chats. Use **+** in the header to add one. |
@@ -97,7 +104,8 @@ Set your default model and manage favorites in **Settings > Models**.
 
 Hover a project for a new chat in that project and a menu to remove it. Removing a project deletes
 its chats and jobs from Gramatrix but never touches the folder. A green dot on a chat means it is
-running, and runs continue while you look at another chat.
+running, and runs continue while you look at another chat. A chat with a bot shows the bot's name
+before its title.
 
 ### Keyboard
 
@@ -130,7 +138,34 @@ fails, **Retry** runs the last message again.
 | Full access  | Yes         | Yes         | Yes           |
 
 When the agent needs approval, a card shows the exact command or a diff of the edit, with
-**Approve** and **Deny**.
+**Approve** and **Deny**. When the agent asks for two or more actions at the same time, a bar above
+the cards offers **Approve all** and **Deny all**. It answers only the cards on screen when you
+click; an action that arrives later gets its own card. Read each card before you approve them all.
+
+## Bots
+
+A bot is an agent with its own name, personality and a memory that lasts between chats. Open
+**Bots** and choose **New bot**. Give it a name, a **soul** that says in your own words who it is
+and how it should behave, and a model. The counter under the soul shows how much of the 4,000
+characters you used. Turn on **Learn from chats** to let the bot review its chats now and then to
+update its memory. Those reviews use tokens from your key.
+
+Under **Picture**, keep the first letter of the name, pick one of the icons, or use a PNG or JPEG
+from your computer, which is cropped to a square. A **Default project** is optional: new chats with
+the bot start in that folder.
+
+To talk to a bot, choose **New chat** on its page, or pick it with the bot chip on Home. Picking a
+bot on Home also picks its default project, unless you already chose one. The chat header shows the
+bot's name. Click it to open the bot's page.
+
+The page of a bot shows its memory in two groups. **About you** holds what it knows about you and
+**Notes** holds everything else. Each group shows how many characters it uses of its limit. Hover
+an entry to edit or delete it, or use **Add to** to write one yourself. When the bot changes its
+memory during a chat, the chat shows a line such as **Saved to memory** with the entry, and the
+page updates right away.
+
+Deleting a bot deletes its memory. Its chats stay as plain chats. See [Bots](bots.md) for how
+memory and learning work.
 
 ## Scheduled jobs
 

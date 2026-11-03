@@ -95,6 +95,19 @@ a refresh runs.
 `.chat-backdrop` in `ChatScreen` is the empty layer reserved for the animated video. It sits on
 `--z-backdrop`, and the chat header, messages and composer sit above it on `--z-content`.
 
+## Bots
+
+`AppProvider` loads the bot list with the other app data and reloads it on `bots.changed`. When
+that event is about a bot that no longer exists, it reloads the chats too, because the host turns
+the chats of a deleted bot into plain chats. `views/BotsView.tsx` holds the list, the bot page and
+the bot form. The memory section reloads on `bots.changed` for its bot, so entries the bot writes
+during a chat appear while the page is open.
+
+`lib/bots.ts` holds the logic with tests: memory usage against `MEMORY_LIMITS`, whether a draft
+entry fits, and `describeMemoryCall`, which turns a `memory` tool call into words such as **Saved
+to memory**. `MessageParts` uses it instead of the raw tool row. Form errors from the host show in
+the form with a `Banner`, not as a toast, so they stay next to what needs fixing.
+
 ## Testing
 
 Unit tests sit next to the code in `src/lib`. Playwright tests in `tests/e2e` come in two kinds:

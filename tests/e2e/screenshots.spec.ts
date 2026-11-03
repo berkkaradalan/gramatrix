@@ -36,6 +36,7 @@ const JOBS: Job[] = [
     permissionMode: 'read-only',
     enabled: true,
     catchUp: false,
+    botId: null,
     lastRunAt: Date.now() - 86_400_000,
     nextRunAt: Date.now() + 43_200_000,
     createdAt: 1
@@ -50,6 +51,7 @@ const JOBS: Job[] = [
     permissionMode: 'ask',
     enabled: false,
     catchUp: true,
+    botId: null,
     lastRunAt: null,
     nextRunAt: null,
     createdAt: 1
@@ -63,6 +65,7 @@ const CHANNELS: Channel[] = [
     projectId: PROJECT.id,
     model: CHAT.model,
     permissionMode: 'read-only',
+    botId: null,
     state: 'connected',
     error: null
   },
@@ -72,6 +75,7 @@ const CHANNELS: Channel[] = [
     projectId: null,
     model: null,
     permissionMode: 'read-only',
+    botId: null,
     state: 'disabled',
     error: null
   }

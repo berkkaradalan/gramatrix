@@ -6,6 +6,7 @@ function chat(id: string, projectId: string | null, title = id): Chat {
   return {
     id,
     projectId,
+    botId: null,
     title,
     model: { provider: 'openai', model: 'm' },
     permissionMode: 'ask',

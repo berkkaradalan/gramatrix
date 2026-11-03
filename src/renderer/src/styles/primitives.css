@@ -175,9 +175,15 @@
   min-width: 0;
 }
 
-.field > label {
+.field > label,
+.field-label {
   font-size: var(--text-sm);
   font-weight: 500;
+}
+
+/* A chip inside a form keeps its own width instead of stretching like an input. */
+.field > .chip {
+  align-self: flex-start;
 }
 
 .input {
@@ -814,4 +820,22 @@
   font-size: var(--text-md);
   font-weight: 500;
   letter-spacing: -0.02em;
+}
+
+/* A field hint with a character counter on the right */
+
+.field-hint-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+
+.field-counter {
+  flex: none;
+  font-variant-numeric: tabular-nums;
+}
+
+.field-counter-over {
+  color: var(--danger);
 }

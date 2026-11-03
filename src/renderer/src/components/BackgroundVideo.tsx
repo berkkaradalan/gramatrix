@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from 
 import type { BackgroundVideoSettings } from '@shared/types'
 import defaultVideo from '../assets/backgrounds/matrix-rain.mp4'
 import { useHostEvent } from '../state/hooks'
+import { useSystemReducedMotion } from '../state/motion'
 
 /** Where a paused still frame is taken from, past any fade in at the start. */
 const STILL_FRAME_SECONDS = 1.5
@@ -15,19 +16,6 @@ function useWindowVisible(): boolean {
   const [visible, setVisible] = useState(true)
   useHostEvent('window.visibility', (event) => setVisible(event.visible))
   return visible
-}
-
-function useSystemReducedMotion(): boolean {
-  const [reduced, setReduced] = useState(
-    () => window.matchMedia('(prefers-reduced-motion: reduce)').matches
-  )
-  useEffect(() => {
-    const query = window.matchMedia('(prefers-reduced-motion: reduce)')
-    const update = (): void => setReduced(query.matches)
-    query.addEventListener('change', update)
-    return () => query.removeEventListener('change', update)
-  }, [])
-  return reduced
 }
 
 /**

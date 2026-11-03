@@ -45,6 +45,7 @@ interface ChannelRow {
   model_provider: string | null
   model_name: string | null
   permission_mode: string
+  bot_id: string | null
 }
 
 interface PairingRow {
@@ -99,13 +100,16 @@ export class ChannelService {
   }
 
   configure(input: ChannelConfigInput): Channel {
+    const botId = this.existingBot(input.botId ?? null)
     this.context.db
       .prepare(
-        `INSERT INTO channels (kind, enabled, project_id, model_provider, model_name, permission_mode)
-         VALUES (?, ?, ?, ?, ?, ?)
+        `INSERT INTO channels
+         (kind, enabled, project_id, model_provider, model_name, permission_mode, bot_id)
+         VALUES (?, ?, ?, ?, ?, ?, ?)
          ON CONFLICT(kind) DO UPDATE SET enabled = excluded.enabled,
            project_id = excluded.project_id, model_provider = excluded.model_provider,
-           model_name = excluded.model_name, permission_mode = excluded.permission_mode`
+           model_name = excluded.model_name, permission_mode = excluded.permission_mode,
+           bot_id = excluded.bot_id`
       )
       .run(
         input.kind,
@@ -113,7 +117,8 @@ export class ChannelService {
         input.projectId,
         input.model?.provider ?? null,
         input.model?.model ?? null,
-        input.permissionMode
+        input.permissionMode,
+        botId
       )
     // Runs started under the old settings must not outlive them.
     this.abortRuns(input.kind)
@@ -177,6 +182,14 @@ export class ChannelService {
     )
   }
 
+  /** Checks the bot first, so a bot deleted while the settings were open gets a clear error. */
+  private existingBot(botId: string | null): string | null {
+    if (botId !== null && !this.context.db.prepare('SELECT 1 FROM bots WHERE id = ?').get(botId)) {
+      throw new Error('That bot no longer exists. Choose another one.')
+    }
+    return botId
+  }
+
   private get(kind: ChannelKind): Channel {
     const row = this.context.db.prepare('SELECT * FROM channels WHERE kind = ?').get(kind) as
       ChannelRow | undefined
@@ -190,6 +203,7 @@ export class ChannelService {
           ? { provider: row.model_provider as ProviderId, model: row.model_name }
           : null,
       permissionMode: (row?.permission_mode as PermissionMode) ?? DEFAULT_PERMISSION_MODE,
+      botId: row?.bot_id ?? null,
       state: connection.state,
       error: connection.error
     }
@@ -302,7 +316,7 @@ export class ChannelService {
       return
     }
 
-    const chatId = this.resolveChat(kind, message, channel.projectId, model, channel.permissionMode)
+    const chatId = this.resolveChat(kind, message, channel, model)
     const signal = this.runSignal(kind)
     let reply: string
     try {
@@ -311,6 +325,8 @@ export class ChannelService {
         text,
         permissionMode: channel.permissionMode,
         source: 'channel',
+        // A bot's memory holds personal facts, so it stays out of groups and channels.
+        withMemory: message.isDirect,
         signal
       })
       reply = result.text.trim() || REPLIES.emptyResult
@@ -371,22 +387,21 @@ export class ChannelService {
   }
 
   /**
-   * Reuses the chat linked to the thread unless the channel moved to another project.
+   * Reuses the chat linked to the thread unless the channel moved to another project or bot.
    * A channel without a project creates general chats, which have no tools.
    */
   private resolveChat(
     kind: ChannelKind,
     message: InboundMessage,
-    projectId: string | null,
-    model: ModelRef,
-    permissionMode: PermissionMode
+    { projectId, botId, permissionMode }: Channel,
+    model: ModelRef
   ): string {
     const row = this.context.db
       .prepare('SELECT chat_id FROM channel_chats WHERE kind = ? AND external_thread_id = ?')
       .get(kind, message.threadId) as { chat_id: string } | undefined
     if (row) {
       const chat = this.chats.get(row.chat_id)
-      if (chat.projectId === projectId) {
+      if (chat.projectId === projectId && chat.botId === botId) {
         this.chats.update(chat.id, { model, permissionMode })
         return chat.id
       }
@@ -394,13 +409,16 @@ export class ChannelService {
     }
     const chat = this.chats.create({
       projectId,
+      botId,
       model,
       permissionMode,
       title: `${kind === 'telegram' ? 'Telegram' : 'Slack'}: ${message.displayName}`
     })
     this.context.db
-      .prepare('INSERT INTO channel_chats (kind, external_thread_id, chat_id) VALUES (?, ?, ?)')
-      .run(kind, message.threadId, chat.id)
+      .prepare(
+        'INSERT INTO channel_chats (kind, external_thread_id, chat_id, is_direct) VALUES (?, ?, ?, ?)'
+      )
+      .run(kind, message.threadId, chat.id, message.isDirect ? 1 : 0)
     return chat.id
   }
 }

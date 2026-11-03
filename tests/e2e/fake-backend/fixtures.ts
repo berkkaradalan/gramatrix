@@ -1,4 +1,6 @@
 import type {
+  Bot,
+  BotMemory,
   Chat,
   ChatMessage,
   ModelInfo,
@@ -126,6 +128,7 @@ export const MODELS: FakeSeed['models'] = {
 export const CHAT: Chat = {
   id: 'c1',
   projectId: 'p1',
+  botId: null,
   title: 'Refactor the scheduler',
   model: { provider: 'anthropic', model: 'claude-sonnet' },
   permissionMode: 'ask',
@@ -258,4 +261,93 @@ export const SHELL_SEED: Partial<FakeSeed> = {
   chats: [CHAT, GENERAL_CHAT],
   messages: MESSAGES,
   models: MODELS
+}
+
+export const BOT: Bot = {
+  id: 'bot-ada',
+  name: 'Ada',
+  soul: 'You are calm and direct.\nAnswer briefly and point out risks before you change anything.',
+  model: { provider: 'anthropic', model: 'claude-opus' },
+  learns: true,
+  projectId: null,
+  avatar: null,
+  createdAt: 1,
+  updatedAt: 1
+}
+
+export const BOT_MEMORIES: BotMemory[] = [
+  {
+    id: 'mem-1',
+    botId: BOT.id,
+    kind: 'user',
+    content: 'Name is Sam. Prefers short answers with the code first.',
+    createdAt: 1,
+    updatedAt: 1
+  },
+  {
+    id: 'mem-2',
+    botId: BOT.id,
+    kind: 'notes',
+    content: 'The gramatrix project uses npm and Vitest.',
+    createdAt: 2,
+    updatedAt: 2
+  }
+]
+
+export const BOT_CHAT: Chat = {
+  ...CHAT,
+  id: 'c3',
+  projectId: null,
+  botId: BOT.id,
+  title: 'Plan the release notes',
+  updatedAt: Date.now() - 600_000
+}
+
+export const BOT_MESSAGES: ChatMessage[] = [
+  {
+    id: 'bm1',
+    chatId: BOT_CHAT.id,
+    role: 'user',
+    parts: [{ type: 'text', text: 'I am Sam, and I always want release notes as a short list.' }],
+    createdAt: 1
+  },
+  {
+    id: 'bm2',
+    chatId: BOT_CHAT.id,
+    role: 'assistant',
+    parts: [
+      {
+        type: 'tool-call',
+        toolCallId: 'bt1',
+        toolName: 'memory',
+        input: { action: 'add', kind: 'user', content: 'Wants release notes as a short list.' },
+        output: 'Done. The "user" memory uses 92 of 1375 characters.',
+        state: 'completed'
+      },
+      {
+        type: 'tool-call',
+        toolCallId: 'bt2',
+        toolName: 'memory',
+        input: {
+          action: 'replace',
+          kind: 'notes',
+          oldText: 'uses npm',
+          content: 'The gramatrix project uses pnpm and Vitest.'
+        },
+        output: 'Error: No entry in the "notes" memory contains that text.',
+        state: 'failed'
+      },
+      { type: 'text', text: 'Got it, Sam. I will keep release notes to a short list.' }
+    ],
+    createdAt: 2
+  }
+]
+
+/** The shell with one bot, its memory and a chat with it. */
+export const BOT_SEED: Partial<FakeSeed> = {
+  ...SHELL_SEED,
+  chats: [BOT_CHAT, CHAT, GENERAL_CHAT],
+  messages: [...MESSAGES, ...BOT_MESSAGES],
+  bots: [BOT],
+  memories: BOT_MEMORIES
 }

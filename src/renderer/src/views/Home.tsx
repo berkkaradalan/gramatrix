@@ -1,9 +1,11 @@
 import { FileSearch, FlaskConical, Bug, Lightbulb, PenLine, Plug, Sparkles } from 'lucide-react'
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import type { ModelRef, PermissionMode } from '@shared/types'
+import { BotChip } from '../components/BotChip'
 import { Composer } from '../components/Composer'
 import { ModelPicker } from '../components/ModelPicker'
 import { PermissionControl } from '../components/PermissionControl'
+import { DecodingHeading } from '../components/DecodingHeading'
 import { ProjectChip } from '../components/ProjectChip'
 import { resolveDefaultModel, useApp } from '../state/app-context'
 import { invoke, useAction } from '../state/hooks'
@@ -30,21 +32,51 @@ const GENERAL_STARTERS = [
   }
 ]
 
-export function Home({ initialProjectId }: { initialProjectId: string | null }): ReactNode {
-  const { settings, providers, rememberModel, reloadChats } = useApp()
+export function Home({
+  initialProjectId,
+  initialBotId = null
+}: {
+  initialProjectId: string | null
+  initialBotId?: string | null
+}): ReactNode {
+  const { settings, providers, bots, rememberModel, reloadChats } = useApp()
   const { navigate } = useNavigation()
   const { openProviders } = useOverlays()
   const [text, setText] = useState('')
   const [projectId, setProjectId] = useState(initialProjectId)
-  const [pickedModel, setPickedModel] = useState<ModelRef | null>(null)
+  // A bot brings its default project, unless a project was already chosen for this chat.
+  const [projectChosen, setProjectChosen] = useState(initialProjectId !== null)
+  const [botId, setBotId] = useState(initialBotId)
+  // A bot brings its own model. Picking another model afterwards still wins.
+  const [pickedModel, setPickedModel] = useState<ModelRef | null>(
+    () => bots.find(({ id }) => id === initialBotId)?.model ?? null
+  )
   const [permission, setPermission] = useState<PermissionMode>(settings.defaultPermissionMode)
   const input = useRef<HTMLTextAreaElement>(null)
   const { busy, run } = useAction()
 
   useEffect(() => {
     setProjectId(initialProjectId)
+    setProjectChosen(initialProjectId !== null)
     input.current?.focus()
   }, [initialProjectId])
+
+  const chooseProject = (id: string | null): void => {
+    setProjectId(id)
+    setProjectChosen(true)
+  }
+
+  const chooseBot = (id: string | null): void => {
+    const chosen = bots.find((candidate) => candidate.id === id)
+    setBotId(id)
+    setPickedModel(chosen?.model ?? null)
+    if (!projectChosen) setProjectId(chosen?.projectId ?? null)
+  }
+
+  // Coming back to Home from elsewhere starts with the bot the route asks for, like the project.
+  useEffect(() => chooseBot(initialBotId), [initialBotId])
+
+  const bot = bots.find(({ id }) => id === botId)
 
   const connected = providers.some(({ configured }) => configured)
   const pickedUsable = providers.some(
@@ -62,7 +94,12 @@ export function Home({ initialProjectId }: { initialProjectId: string | null }):
     const message = text.trim()
     if (!message || busy) return
     void run(async () => {
-      const chat = await invoke('chats.create', { projectId, model, permissionMode: permission })
+      const chat = await invoke('chats.create', {
+        projectId,
+        model,
+        permissionMode: permission,
+        botId: bot?.id ?? null
+      })
       try {
         await invoke('agent.send', { chatId: chat.id, text: message })
       } catch (error) {
@@ -79,7 +116,7 @@ export function Home({ initialProjectId }: { initialProjectId: string | null }):
   return (
     <div className="home">
       <div className="home-column">
-        <h1>What should we work on?</h1>
+        <DecodingHeading text={bot ? `Chat with ${bot.name}` : 'What should we work on?'} />
         <Composer
           ref={input}
           large
@@ -89,10 +126,15 @@ export function Home({ initialProjectId }: { initialProjectId: string | null }):
           onSubmit={send}
           canSend={canSend || (!connected && Boolean(text.trim()))}
           placeholder={
-            connected ? 'Ask anything, or describe a task' : 'Connect a provider to start chatting'
+            !connected
+              ? 'Connect a provider to start chatting'
+              : bot
+                ? `Message ${bot.name}`
+                : 'Ask anything, or describe a task'
           }
         >
-          <ProjectChip projectId={projectId} onChange={setProjectId} />
+          <ProjectChip projectId={projectId} onChange={chooseProject} />
+          <BotChip botId={bot?.id ?? null} onChange={chooseBot} />
           {connected ? (
             <ModelPicker value={model} onChange={setPickedModel} />
           ) : (

@@ -44,6 +44,7 @@ export default defineConfig({
           label: 'Features',
           items: [
             { slug: 'docs/agent' },
+            { slug: 'docs/bots' },
             { slug: 'docs/providers' },
             { slug: 'docs/scheduled-jobs' },
             { slug: 'docs/channels' },

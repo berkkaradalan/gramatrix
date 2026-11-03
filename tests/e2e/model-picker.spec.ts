@@ -62,6 +62,18 @@ test('accepts a custom model id', async () => {
   await close()
 })
 
+test('the name of a provider finds its models, however it is written', async () => {
+  const { page, close } = await launchWithFakeBackend(SHELL_SEED)
+  await openPicker(page)
+  for (const query of ['zai', 'Z.ai', 'coding plan']) {
+    await page.getByPlaceholder('Search models').fill(query)
+    await expect(page.getByRole('option', { name: /^GLM Air/ })).toBeVisible()
+    await expect(page.getByRole('option', { name: /^GLM\b(?! Air)/ })).toBeVisible()
+    await expect(page.getByRole('option', { name: /^Use .* with/ })).toHaveCount(0)
+  }
+  await close()
+})
+
 test('marks a saved list and models without tools', async () => {
   const { page, close } = await launchWithFakeBackend(SHELL_SEED)
   await openPicker(page)

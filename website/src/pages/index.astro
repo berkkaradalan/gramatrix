@@ -53,6 +53,15 @@ const socialImage = new URL('/og.png', Astro.site).href
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <script is:inline>
+      // Hides the decoding hero text until src/scripts/decode-text.ts starts, so the plain text
+      // does not flash first. It shows again on its own if that script never runs.
+      if (!matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        const root = document.documentElement
+        root.classList.add('decode-pending')
+        setTimeout(() => root.classList.remove('decode-pending'), 2000)
+      }
+    </script>
     <title>{title}</title>
     <meta name="description" content={DESCRIPTION} />
     <meta name="theme-color" content="#000000" />
@@ -94,8 +103,10 @@ const socialImage = new URL('/og.png', Astro.site).href
       <section class="hero">
         <canvas class="ascii" data-ascii aria-hidden="true"></canvas>
         <div class="hero-copy">
-          <h1>A coding agent for your desktop.</h1>
-          <p class="lead">
+          <h1 data-decode data-decode-delay="150" data-decode-step="28">
+            A coding agent for your desktop.
+          </h1>
+          <p class="lead" data-decode data-decode-delay="350" data-decode-step="7">
             Gramatrix reads your code, edits files and runs commands, and it asks first. Bring your
             own API key or coding plan. No account needed.
           </p>
@@ -206,8 +217,10 @@ const socialImage = new URL('/og.png', Astro.site).href
     <script>
       import { startAsciiField, startAsciiWordmark } from '../scripts/ascii-field'
       import { connectCopyButtons, connectDownloads } from '../scripts/downloads'
+      import { startDecoding } from '../scripts/decode-text'
       import { startFeatureTour } from '../scripts/feature-tour'
 
+      startDecoding()
       const tour = document.querySelector<HTMLElement>('[data-tour]')
       if (tour) startFeatureTour(tour)
       const canvas = document.querySelector<HTMLCanvasElement>('[data-ascii]')

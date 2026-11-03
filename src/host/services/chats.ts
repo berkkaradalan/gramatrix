@@ -14,6 +14,7 @@ import type { RpcRouter } from '../rpc-router'
 interface ChatRow {
   id: string
   project_id: string | null
+  bot_id: string | null
   title: string
   model_provider: string
   model_name: string
@@ -34,6 +35,7 @@ function toChat(row: ChatRow): Chat {
   return {
     id: row.id,
     projectId: row.project_id,
+    botId: row.bot_id,
     title: row.title,
     model: { provider: row.model_provider as ProviderId, model: row.model_name },
     permissionMode: row.permission_mode as PermissionMode,
@@ -88,18 +90,19 @@ export class ChatService {
     model: ModelRef
     permissionMode: PermissionMode
     title?: string
+    botId?: string | null
   }): Chat {
     const now = this.context.now()
     const id = randomUUID()
     this.context.db
       .prepare(
-        `INSERT INTO chats
-         (id, project_id, title, model_provider, model_name, permission_mode, created_at, updated_at)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
+        `INSERT INTO chats (id, project_id, bot_id, title, model_provider, model_name,
+         permission_mode, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
       )
       .run(
         id,
         input.projectId,
+        input.botId ?? null,
         input.title ?? NEW_CHAT_TITLE,
         input.model.provider,
         input.model.model,
@@ -111,26 +114,37 @@ export class ChatService {
     return this.get(id)
   }
 
+  /**
+   * Changes a chat. Moving it to another project, or into one from a general chat, gives the next
+   * run that project's files and tools. A run already in progress keeps the folder it started with.
+   */
   update(
     id: string,
-    patch: { title?: string; model?: ModelRef; permissionMode?: PermissionMode }
+    patch: {
+      title?: string
+      model?: ModelRef
+      permissionMode?: PermissionMode
+      projectId?: string | null
+    }
   ): Chat {
     const chat = this.get(id)
     const next = { ...chat, ...patch }
     this.context.db
       .prepare(
         `UPDATE chats SET title = ?, model_provider = ?, model_name = ?, permission_mode = ?,
-         updated_at = ? WHERE id = ?`
+         project_id = ?, updated_at = ? WHERE id = ?`
       )
       .run(
         next.title,
         next.model.provider,
         next.model.model,
         next.permissionMode,
+        next.projectId,
         this.context.now(),
         id
       )
     this.notify(chat.projectId)
+    if (next.projectId !== chat.projectId) this.notify(next.projectId)
     return this.get(id)
   }
 
@@ -139,6 +153,17 @@ export class ChatService {
     for (const listener of this.removalListeners) listener(id)
     this.context.db.prepare('DELETE FROM chats WHERE id = ?').run(id)
     this.notify(chat.projectId)
+  }
+
+  /**
+   * False for a chat that mirrors a group or channel conversation on a chat platform, where other
+   * people read along. A bot does not use its memory there, even when the chat continues in the app.
+   */
+  isPrivate(chatId: string): boolean {
+    const row = this.context.db
+      .prepare('SELECT is_direct FROM channel_chats WHERE chat_id = ?')
+      .get(chatId) as { is_direct: number } | undefined
+    return row === undefined || row.is_direct === 1
   }
 
   messages(chatId: string): ChatMessage[] {
@@ -181,8 +206,8 @@ export class ChatService {
 
   register(router: RpcRouter): void {
     router.handle('chats.list', () => this.list())
-    router.handle('chats.create', ({ projectId, model, permissionMode }) =>
-      this.create({ projectId, model, permissionMode: permissionMode ?? 'ask' })
+    router.handle('chats.create', ({ projectId, model, permissionMode, botId }) =>
+      this.create({ projectId, model, permissionMode: permissionMode ?? 'ask', botId })
     )
     router.handle('chats.update', ({ id, ...patch }) => this.update(id, patch))
     router.handle('chats.remove', ({ id }) => this.remove(id))

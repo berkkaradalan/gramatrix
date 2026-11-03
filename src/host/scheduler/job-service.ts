@@ -30,6 +30,7 @@ interface JobRow {
   permission_mode: string
   enabled: number
   catch_up: number
+  bot_id: string | null
   last_run_at: number | null
   scheduled_from: number
   created_at: number
@@ -94,14 +95,15 @@ export class JobService {
 
   create(input: JobInput): Job {
     assertValidCron(input.cron)
+    const botId = this.existingBot(input.botId ?? null)
     const id = randomUUID()
     const now = this.context.now()
     this.context.db
       .prepare(
         `INSERT INTO jobs
          (id, project_id, name, cron, prompt, model_provider, model_name, permission_mode,
-          enabled, catch_up, scheduled_from, created_at)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+          enabled, catch_up, bot_id, scheduled_from, created_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
       )
       .run(
         id,
@@ -114,6 +116,7 @@ export class JobService {
         input.permissionMode,
         input.enabled ? 1 : 0,
         input.catchUp ? 1 : 0,
+        botId,
         now,
         now
       )
@@ -126,13 +129,14 @@ export class JobService {
     if (patch.cron !== undefined) assertValidCron(patch.cron)
     const job = this.get(id)
     const next = { ...job, ...patch }
+    const botId = this.existingBot(next.botId ?? null)
     // Moving the schedule start keeps a job that was off from counting as missed.
     const scheduleChanged =
       next.cron !== job.cron || (next.enabled && !job.enabled) ? this.context.now() : null
     this.context.db
       .prepare(
         `UPDATE jobs SET project_id = ?, name = ?, cron = ?, prompt = ?, model_provider = ?,
-         model_name = ?, permission_mode = ?, enabled = ?, catch_up = ?,
+         model_name = ?, permission_mode = ?, enabled = ?, catch_up = ?, bot_id = ?,
          scheduled_from = COALESCE(?, scheduled_from) WHERE id = ?`
       )
       .run(
@@ -145,6 +149,7 @@ export class JobService {
         next.permissionMode,
         next.enabled ? 1 : 0,
         next.catchUp ? 1 : 0,
+        botId,
         scheduleChanged,
         id
       )
@@ -227,6 +232,14 @@ export class JobService {
     router.handle('jobs.runs', ({ jobId }) => this.runs(jobId))
   }
 
+  /** Checks the bot first, so a bot deleted while the editor was open gets a clear error. */
+  private existingBot(botId: string | null): string | null {
+    if (botId !== null && !this.context.db.prepare('SELECT 1 FROM bots WHERE id = ?').get(botId)) {
+      throw new Error('That bot no longer exists. Choose another one.')
+    }
+    return botId
+  }
+
   private getRow(id: string): JobRow {
     const row = this.context.db.prepare('SELECT * FROM jobs WHERE id = ?').get(id) as
       JobRow | undefined
@@ -246,6 +259,7 @@ export class JobService {
       permissionMode: row.permission_mode as PermissionMode,
       enabled,
       catchUp: row.catch_up === 1,
+      botId: row.bot_id,
       lastRunAt: row.last_run_at,
       nextRunAt: enabled ? nextFireTime(row.cron, this.context.now()) : null,
       createdAt: row.created_at
@@ -302,6 +316,7 @@ export class JobService {
     try {
       const chat = this.chats.create({
         projectId: job.projectId,
+        botId: job.botId,
         model: job.model,
         permissionMode: job.permissionMode,
         title: `Job: ${job.name}`
@@ -312,6 +327,8 @@ export class JobService {
         text: job.prompt,
         permissionMode: job.permissionMode,
         source: 'job',
+        // Nobody else reads a job's chat, so a bot keeps its memory.
+        withMemory: true,
         signal
       })
       this.finishRun(runId, 'succeeded', null)

@@ -18,6 +18,9 @@ import type {
   UsageSource
 } from '@shared/types'
 import type { AgentRunner, HeadlessRunInput, HeadlessRunResult } from '../agent-runner'
+import type { BotService } from '../bots/bot-service'
+import { MemoryReviewer } from '../bots/memory-review'
+import { MEMORY_TOOL_NAME, createMemoryTool } from '../bots/memory-tool'
 import type { HostContext } from '../context'
 import { providerEntry } from '../providers/catalog'
 import { explainFailure, failureDetails } from '../providers/provider-errors'
@@ -28,7 +31,12 @@ import type { ProjectService } from '../services/projects'
 import type { StepUsage, UsageRecorder } from '../services/usage'
 import { CommandRegistry } from './commands'
 import { toModelMessages } from './history'
-import { GENERAL_CHAT_INSTRUCTIONS, agentInstructions } from './instructions'
+import {
+  agentInstructions,
+  botIdentity,
+  botInstructions,
+  generalChatInstructions
+} from './instructions'
 import { ApprovalBroker, lowerPermissionMode } from './permissions'
 import { RunRecorder, type RunEventBody } from './run-recorder'
 import { createRunTools, type RunScope } from './run-tools'
@@ -43,6 +51,7 @@ export interface AgentServiceDependencies {
   projects: ProjectService
   resolveModel: ModelResolver
   usage?: UsageRecorder
+  bots?: BotService
 }
 
 interface ActiveRun {
@@ -59,6 +68,8 @@ interface RunOptions {
   /** Caps the mode stored on the chat. It can never raise it. */
   permissionLimit?: PermissionMode
   source: UsageSource
+  /** Whether a bot may read and change its memory. See `HeadlessRunInput.withMemory`. */
+  withMemory: boolean
   controller: AbortController
 }
 
@@ -81,18 +92,31 @@ export class AgentService implements AgentRunner {
   private readonly approvals = new ApprovalBroker()
   private readonly commands = new CommandRegistry()
   private readonly activeRuns = new Map<string, ActiveRun>()
+  /** Lets bots that learn review their chats in the background. Public so tests can wait on it. */
+  readonly memoryReviews: MemoryReviewer | undefined
 
   constructor(
     private readonly context: HostContext,
     private readonly dependencies: AgentServiceDependencies
-  ) {}
+  ) {
+    const { bots } = dependencies
+    this.memoryReviews = bots && new MemoryReviewer({ ...dependencies, bots })
+  }
 
   /** Starts a run that reports through events and returns as soon as it has started. */
   send(chatId: string, text: string): { runId: string } {
     const chat = this.dependencies.chats.get(chatId)
     const runId = randomUUID()
     const controller = this.claimChat(chatId)
-    void this.run({ chat, text, runId, interactive: true, source: 'chat', controller })
+    void this.run({
+      chat,
+      text,
+      runId,
+      interactive: true,
+      source: 'chat',
+      withMemory: this.dependencies.chats.isPrivate(chatId),
+      controller
+    })
     return { runId }
   }
 
@@ -104,7 +128,14 @@ export class AgentService implements AgentRunner {
     const runId = randomUUID()
     const controller = this.claimChat(chatId)
     chats.removeMessagesAfter(chatId, lastUserMessage.id)
-    void this.run({ chat, runId, interactive: true, source: 'chat', controller })
+    void this.run({
+      chat,
+      runId,
+      interactive: true,
+      source: 'chat',
+      withMemory: chats.isPrivate(chatId),
+      controller
+    })
     return { runId }
   }
 
@@ -123,6 +154,7 @@ export class AgentService implements AgentRunner {
         interactive: false,
         permissionLimit: input.permissionMode,
         source: input.source,
+        withMemory: input.withMemory === true,
         controller
       })
       if (outcome.status === 'finished') return outcome
@@ -149,8 +181,9 @@ export class AgentService implements AgentRunner {
   }
 
   /**
-   * Cancels every run and kills every command started by this service, including background
-   * processes left by commands that already finished. Called when the host shuts down.
+   * Cancels every run and memory review and kills every command started by this service,
+   * including background processes left by commands that already finished. Called when the host
+   * shuts down.
    */
   async stop(): Promise<void> {
     const runs = [...this.activeRuns.values()]
@@ -158,7 +191,7 @@ export class AgentService implements AgentRunner {
     await Promise.all([
       this.commands.killAll(STOP_GRACE_MS),
       Promise.race([
-        Promise.allSettled(runs.map((run) => run.finished)),
+        Promise.allSettled([...runs.map((run) => run.finished), this.memoryReviews?.stop()]),
         delay(STOP_GRACE_MS, undefined, { ref: false })
       ])
     ])
@@ -238,6 +271,9 @@ export class AgentService implements AgentRunner {
       if (streamError !== undefined) throw streamError
 
       emitFinal({ type: 'finished' })
+      // Only a new user message can make a review due. A retry would review the same messages.
+      // A run without memory, such as one in a group chat, must not feed memory either.
+      if (text !== undefined && options.withMemory) this.memoryReviews?.afterRun(chatId)
       const message = chats.messages(chatId).find(({ id }) => id === assistantMessageId)
       return {
         status: 'finished',
@@ -263,13 +299,17 @@ export class AgentService implements AgentRunner {
     }
   }
 
-  /** Tools exist only here, so a general chat can never reach them or the permission check. */
+  /**
+   * File and command tools exist only here, so a general chat can never reach them or the
+   * permission check.
+   */
   private projectAgentSetup(
     { chat, interactive, permissionLimit, controller }: RunOptions,
     project: Project,
     model: LanguageModel,
     recorder: RunRecorder,
-    recordSubagentStep: (step: StepUsage) => void
+    recordSubagentStep: (step: StepUsage) => void,
+    identity: string | undefined
   ): { instructions: string; tools: ToolSet } {
     const scope: RunScope = {
       chatId: chat.id,
@@ -287,7 +327,44 @@ export class AgentService implements AgentRunner {
       commands: this.commands,
       recordSubagentStep
     }
-    return { instructions: agentInstructions(project.path), tools: createRunTools(scope) }
+    return {
+      instructions: agentInstructions(project.path, process.platform, identity),
+      tools: createRunTools(scope)
+    }
+  }
+
+  /**
+   * A bot adds its soul to the instructions. When the run may use memory, it also adds the memory
+   * and the memory tool.
+   */
+  private agentSetup(
+    options: RunOptions,
+    project: Project | null,
+    model: LanguageModel,
+    recorder: RunRecorder,
+    recordSubagentStep: (step: StepUsage) => void
+  ): { instructions: string; tools: ToolSet } {
+    const { bots } = this.dependencies
+    const bot = options.chat.botId === null ? undefined : bots?.find(options.chat.botId)
+    const withMemory = bot !== undefined && options.withMemory
+    const identity = bot && botIdentity(bot, project !== null)
+    const setup = project
+      ? this.projectAgentSetup(options, project, model, recorder, recordSubagentStep, identity)
+      : {
+          instructions: generalChatInstructions(identity, {
+            hasMemory: withMemory,
+            inApp: options.interactive
+          }),
+          tools: {}
+        }
+    if (!bot || !bots) return setup
+    if (!withMemory) {
+      return { ...setup, instructions: `${setup.instructions}\n\n${botInstructions(bot, null)}` }
+    }
+    return {
+      instructions: `${setup.instructions}\n\n${botInstructions(bot, bots.memories(bot.id))}`,
+      tools: { ...setup.tools, [MEMORY_TOOL_NAME]: createMemoryTool(bots, bot.id, recorder) }
+    }
   }
 
   /** Runs the agent loop. Returns the error reported by the stream, if there was one. */
@@ -304,11 +381,9 @@ export class AgentService implements AgentRunner {
       if (recording) recordings.push(recording)
     }
 
-    const setup = project
-      ? this.projectAgentSetup(options, project, model, recorder, (step) =>
-          record('subagent', step)
-        )
-      : { instructions: GENERAL_CHAT_INSTRUCTIONS, tools: {} }
+    const setup = this.agentSetup(options, project, model, recorder, (step) =>
+      record('subagent', step)
+    )
     const agent = new ToolLoopAgent({
       model,
       ...setup,

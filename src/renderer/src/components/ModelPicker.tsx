@@ -17,6 +17,7 @@ import {
   formatPrice,
   modelKey,
   sameModel,
+  looksLikeModelId,
   searchModels,
   shortModelName,
   toggleModel
@@ -163,8 +164,8 @@ function ProviderGroup({
   const [showAll, setShowAll] = useState(false)
   const models = useMemo(() => {
     const list = entry.list?.models ?? []
-    return query ? searchModels(list, query) : list
-  }, [entry.list, query])
+    return query ? searchModels(list, query, provider) : list
+  }, [entry.list, query, provider])
 
   if (query && models.length === 0) return null
   const limit = query ? SEARCH_GROUP_LIMIT : showAll ? models.length : GROUP_LIMIT
@@ -257,7 +258,8 @@ function PickerBody({
     .filter((ref) => providerFor(ref) && !favoriteModels.some((item) => sameModel(item, ref)))
     .slice(0, RECENT_LIMIT)
   const anyMatch = connected.some(
-    (provider) => searchModels(entries.get(provider.id)?.list?.models ?? [], query).length > 0
+    (provider) =>
+      searchModels(entries.get(provider.id)?.list?.models ?? [], query, provider).length > 0
   )
 
   return (
@@ -295,7 +297,7 @@ function PickerBody({
           />
         ))}
         {query && !anyMatch && <p className="model-empty">No models match "{query}".</p>}
-        {query && (!anyMatch || !/\s/.test(query)) && (
+        {query && (!anyMatch || looksLikeModelId(query)) && (
           <Command.Group heading={<span className="model-group-heading">Use a custom id</span>}>
             {connected.map((provider) => (
               <Command.Item

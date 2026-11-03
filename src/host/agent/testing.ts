@@ -153,6 +153,7 @@ export function createAgentHarness(
     chats,
     projects,
     usage,
+    bots: testHost.host.services.bots,
     resolveModel: async () => {
       if (resolveFailure) throw new Error(resolveFailure)
       return model

@@ -1,6 +1,8 @@
 import type { HostEvents, RpcMethods } from '../../../src/shared/rpc'
 import { DEFAULT_SETTINGS, type AppSettings } from '../../../src/shared/types'
 import type {
+  Bot,
+  BotMemory,
   Chat,
   ChatMessage,
   ModelList,
@@ -23,6 +25,12 @@ export interface FakeSeed {
   failSend: boolean
   /** Results for read only methods, used as they are. */
   overrides: Partial<{ [M in keyof RpcMethods]: RpcMethods[M]['result'] }>
+  bots?: Bot[]
+  memories?: BotMemory[]
+  /** Makes `bots.create` and `bots.update` fail with this message, as the host does on bad input. */
+  botError?: string
+  /** What the bot picture dialog returns, as if the user picked a file. */
+  botPicture?: string
 }
 
 export interface FakeBackend {
@@ -55,6 +63,8 @@ export function installFakeBackend({
   const providers = seed.providers.map((provider) => ({ ...provider }))
   const projects = [...seed.projects]
   const chats = [...seed.chats]
+  const bots = (seed.bots ?? []).map((bot) => ({ ...bot }))
+  const memories = (seed.memories ?? []).map((memory) => ({ ...memory }))
   const secrets = new Set<string>()
   let nextId = 1
 
@@ -86,6 +96,7 @@ export function installFakeBackend({
       bySource: []
     },
     'app.pickBackgroundVideo': null,
+    'app.pickBotPicture': seed.botPicture ?? null,
     'jobs.list': [],
     'jobs.runs': [],
     'channels.list': [],
@@ -159,11 +170,16 @@ export function installFakeBackend({
     'chats.create': ({
       projectId,
       model,
-      permissionMode
-    }: Pick<Chat, 'projectId' | 'model'> & { permissionMode?: Chat['permissionMode'] }) => {
+      permissionMode,
+      botId
+    }: Pick<Chat, 'projectId' | 'model'> & {
+      permissionMode?: Chat['permissionMode']
+      botId?: string | null
+    }) => {
       const chat: Chat = {
         id: `chat-${nextId++}`,
         projectId,
+        botId: botId ?? null,
         title: 'New chat',
         model,
         permissionMode: permissionMode ?? 'ask',
@@ -189,6 +205,65 @@ export function installFakeBackend({
     },
     'chats.messages': ({ chatId }: { chatId: string }) =>
       seed.messages.filter((message) => message.chatId === chatId),
+    'bots.list': () => [...bots].sort((a, b) => a.name.localeCompare(b.name)),
+    'bots.create': (
+      input: Pick<Bot, 'name' | 'soul' | 'model' | 'learns'> &
+        Partial<Pick<Bot, 'projectId' | 'avatar'>>
+    ) => {
+      if (seed.botError) throw new Error(seed.botError)
+      const bot: Bot = {
+        projectId: null,
+        avatar: null,
+        ...input,
+        id: `bot-${nextId++}`,
+        createdAt: 1,
+        updatedAt: 1
+      }
+      bots.push(bot)
+      emit('bots.changed', { botId: bot.id })
+      return bot
+    },
+    'bots.update': ({ id, patch }: { id: string; patch: Partial<Bot> }) => {
+      if (seed.botError) throw new Error(seed.botError)
+      const bot = bots.find((candidate) => candidate.id === id)
+      if (bot) Object.assign(bot, patch)
+      emit('bots.changed', { botId: id })
+      return bot
+    },
+    'bots.remove': ({ id }: { id: string }) => {
+      bots.splice(
+        bots.findIndex((bot) => bot.id === id),
+        1
+      )
+      for (const chat of chats) if (chat.botId === id) chat.botId = null
+      emit('bots.changed', { botId: id })
+    },
+    'bots.memories': ({ botId }: { botId: string }) =>
+      memories.filter((memory) => memory.botId === botId),
+    'bots.addMemory': ({ botId, kind, content }: Pick<BotMemory, 'botId' | 'kind' | 'content'>) => {
+      const memory: BotMemory = {
+        id: `memory-${nextId++}`,
+        botId,
+        kind,
+        content: content.trim(),
+        createdAt: 1,
+        updatedAt: 1
+      }
+      memories.push(memory)
+      emit('bots.changed', { botId })
+      return memory
+    },
+    'bots.updateMemory': ({ id, content }: { id: string; content: string }) => {
+      const memory = memories.find((candidate) => candidate.id === id)
+      if (memory) memory.content = content.trim()
+      emit('bots.changed', { botId: memory?.botId ?? '' })
+      return memory
+    },
+    'bots.removeMemory': ({ id }: { id: string }) => {
+      const index = memories.findIndex((memory) => memory.id === id)
+      const [removed] = memories.splice(index, 1)
+      emit('bots.changed', { botId: removed?.botId ?? '' })
+    },
     'agent.send': () => {
       if (seed.failSend) throw new Error('The agent could not start.')
       return { runId: 'run-1' }

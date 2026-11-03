@@ -3,6 +3,7 @@ import { BackgroundVideo } from '../components/BackgroundVideo'
 import { useApp } from '../state/app-context'
 import { usePersistedState } from '../state/hooks'
 import { NavigationContext, type Navigation, type Route } from '../state/navigation'
+import { BotsView, BotView } from './BotsView'
 import { ChannelsView } from './ChannelsView'
 import { ChatScreen } from './ChatScreen'
 import { CommandPalette } from './CommandPalette'
@@ -28,17 +29,17 @@ function restoredRoute(): Route {
 }
 
 export function Shell(): ReactNode {
-  const { chats, projects, settings } = useApp()
+  const { chats, projects, bots, botsLoaded, settings } = useApp()
   const [route, setRoute] = useState<Route>(restoredRoute)
   const [homeKey, setHomeKey] = useState(0)
   const [paletteOpen, setPaletteOpen] = useState(false)
   const [collapsed, setCollapsed] = usePersistedState('sidebar.collapsed', false)
   const [videoFailed, setVideoFailed] = useState(false)
 
-  const newChat = useCallback((projectId: string | null = null) => {
+  const newChat = useCallback((projectId: string | null = null, botId: string | null = null) => {
     // A new key clears any half written message, like opening a fresh chat should.
     setHomeKey((key) => key + 1)
-    setRoute({ view: 'home', projectId })
+    setRoute({ view: 'home', projectId, botId })
   }, [])
 
   const navigation = useMemo<Navigation>(
@@ -72,6 +73,7 @@ export function Shell(): ReactNode {
   const chat = route.view === 'chat' ? chats.find(({ id }) => id === route.chatId) : undefined
   const project =
     route.view === 'project' ? projects.find(({ id }) => id === route.projectId) : undefined
+  const bot = route.view === 'bot' ? bots.find(({ id }) => id === route.botId) : undefined
   const { backgroundVideo, reduceMotion } = settings
   const showsBackdrop = route.view === 'home' || route.view === 'chat'
   const videoOn = backgroundVideo.enabled && !videoFailed
@@ -93,7 +95,13 @@ export function Shell(): ReactNode {
             )}
             <div className="backdrop-dim" />
           </div>
-          {route.view === 'home' && <Home key={homeKey} initialProjectId={route.projectId} />}
+          {route.view === 'home' && (
+            <Home
+              key={homeKey}
+              initialProjectId={route.projectId}
+              initialBotId={route.botId ?? null}
+            />
+          )}
           {route.view === 'chat' && chat && <ChatScreen key={chat.id} chat={chat} />}
           {route.view === 'chat' && !chat && <Home key={homeKey} initialProjectId={null} />}
           {route.view === 'scheduled' && <ScheduledView />}
@@ -101,6 +109,10 @@ export function Shell(): ReactNode {
           {route.view === 'project' && project && <ProjectView project={project} />}
           {route.view === 'project' && !project && <Home key={homeKey} initialProjectId={null} />}
           {route.view === 'channels' && <ChannelsView />}
+          {route.view === 'bots' && <BotsView createOnOpen={route.create === true} />}
+          {route.view === 'bot' && bot && <BotView key={bot.id} bot={bot} />}
+          {/* A deleted bot, or one from a restored route that is gone, falls back to the list. */}
+          {route.view === 'bot' && !bot && botsLoaded && <BotsView />}
           {route.view === 'settings' && (
             <SettingsView
               section={route.section}

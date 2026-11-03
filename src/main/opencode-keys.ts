@@ -7,8 +7,13 @@ import type { ProviderId } from '@shared/types'
 const OPENCODE_IDS: Record<ProviderId, string> = {
   anthropic: 'anthropic',
   openai: 'openai',
+  gemini: 'google',
+  xai: 'xai',
+  deepseek: 'deepseek',
+  mistral: 'mistral',
   openrouter: 'openrouter',
   zai: 'zai',
+  alibaba: 'alibaba',
   minimax: 'minimax',
   'zai-coding-plan': 'zai-coding-plan',
   'zhipu-coding-plan': 'zhipuai-coding-plan',

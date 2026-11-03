@@ -17,8 +17,9 @@ control of what it may do. Gramatrix runs on macOS and Linux.
 
 ## Features
 
-- **Your own keys:** Anthropic, OpenAI, OpenRouter, Z.ai and MiniMax, plus the Z.ai, MiniMax, Kimi
-  and Alibaba coding plans. Model lists come live from each provider.
+- **Your own keys:** Anthropic, OpenAI, Gemini, Grok, DeepSeek, Mistral, Qwen, OpenRouter, Z.ai
+  and MiniMax, plus the Z.ai, MiniMax, Kimi and Alibaba coding plans. Model lists come live from
+  each provider.
 - **Start anywhere:** ask a quick question with no setup, or pick a project folder so the agent can
   work on your code.
 - **Permission modes:** from read-only to full access, with inline approvals.

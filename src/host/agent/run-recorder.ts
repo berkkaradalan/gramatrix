@@ -1,7 +1,10 @@
 import type {
   ApprovalRequest,
   MessagePart,
+  ProviderMetadata,
+  ReasoningPart,
   RunEvent,
+  TextPart,
   ToolCallPart,
   ToolCallState
 } from '@shared/types'
@@ -19,6 +22,11 @@ export interface RunRecorderOptions {
 export class RunRecorder {
   private readonly parts: MessagePart[] = []
   private closed = false
+  /** The text or reasoning block the provider is streaming, from its start event to its end. */
+  private openBlock: { type: 'text' | 'reasoning'; part: TextPart | ReasoningPart | null } | null =
+    null
+  /** Provider data for tool calls that the SDK announced before the tool started running. */
+  private readonly pendingToolMetadata = new Map<string, ProviderMetadata>()
 
   constructor(private readonly options: RunRecorderOptions) {}
 
@@ -41,8 +49,43 @@ export class RunRecorder {
     this.emit({ type: 'reasoning-delta', delta })
   }
 
+  /** A new text or reasoning block starts. It becomes its own part, with its own provider data. */
+  blockStarted(type: 'text' | 'reasoning'): void {
+    this.openBlock = { type, part: null }
+  }
+
+  /**
+   * Keeps the provider data of a finished block. A block without text, such as encrypted reasoning,
+   * is still kept, because some providers need it back on the next request.
+   */
+  blockEnded(type: 'text' | 'reasoning', providerMetadata: ProviderMetadata | undefined): void {
+    const block = this.openBlock?.type === type ? this.openBlock : null
+    this.openBlock = null
+    if (!hasData(providerMetadata)) return
+    if (block?.part) {
+      block.part.providerMetadata = providerMetadata
+    } else if (type === 'reasoning') {
+      this.parts.push({ type, text: '', providerMetadata })
+    }
+  }
+
+  /** Provider data of a tool call, which can arrive before or after the tool starts running. */
+  toolCallMetadata(toolCallId: string, providerMetadata: ProviderMetadata | undefined): void {
+    if (!hasData(providerMetadata)) return
+    const part = this.findTool(toolCallId)
+    if (part) part.providerMetadata = providerMetadata
+    else this.pendingToolMetadata.set(toolCallId, providerMetadata)
+  }
+
   toolStarted(input: Pick<ToolCallPart, 'toolCallId' | 'toolName' | 'input' | 'subagentId'>): void {
-    const part: ToolCallPart = { ...input, type: 'tool-call', state: 'running' }
+    const providerMetadata = this.pendingToolMetadata.get(input.toolCallId)
+    this.pendingToolMetadata.delete(input.toolCallId)
+    const part: ToolCallPart = {
+      ...input,
+      type: 'tool-call',
+      state: 'running',
+      ...(providerMetadata ? { providerMetadata } : {})
+    }
     this.parts.push(part)
     this.emit({ type: 'tool-call', part: { ...part } })
     this.flush()
@@ -101,8 +144,23 @@ export class RunRecorder {
   }
 
   private appendText(type: 'text' | 'reasoning', delta: string): void {
+    const block = this.openBlock?.type === type ? this.openBlock : null
+    if (block?.part) {
+      block.part.text += delta
+      return
+    }
     const last = this.parts.at(-1)
-    if (last?.type === type) last.text += delta
-    else this.parts.push({ type, text: delta })
+    // Without start events, as from older providers, consecutive deltas still join one part.
+    if (!block && last?.type === type) {
+      last.text += delta
+      return
+    }
+    const part = { type, text: delta }
+    this.parts.push(part)
+    if (block) block.part = part
   }
+}
+
+function hasData(metadata: ProviderMetadata | undefined): metadata is ProviderMetadata {
+  return metadata !== undefined && Object.keys(metadata).length > 0
 }

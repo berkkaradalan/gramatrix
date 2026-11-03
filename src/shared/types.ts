@@ -3,8 +3,13 @@
 export const PROVIDER_IDS = [
   'anthropic',
   'openai',
+  'gemini',
+  'xai',
+  'deepseek',
+  'mistral',
   'openrouter',
   'zai',
+  'alibaba',
   'minimax',
   'zai-coding-plan',
   'zhipu-coding-plan',
@@ -91,14 +96,23 @@ export interface Chat {
 
 export type ToolCallState = 'running' | 'awaiting-approval' | 'completed' | 'failed' | 'denied'
 
+/**
+ * Data a provider attaches to a part, such as a reasoning signature or encrypted reasoning. It is
+ * stored as is and only sent back to providers that need it. See `replaysReasoning` in the host.
+ */
+export type ProviderMetadata = Record<string, Record<string, unknown>>
+
 export interface TextPart {
   type: 'text'
   text: string
+  providerMetadata?: ProviderMetadata
 }
 
 export interface ReasoningPart {
   type: 'reasoning'
+  /** Empty when the provider only returned encrypted reasoning. */
   text: string
+  providerMetadata?: ProviderMetadata
 }
 
 export interface ToolCallPart {
@@ -110,6 +124,7 @@ export interface ToolCallPart {
   state: ToolCallState
   /** Set when the call ran inside a subagent. */
   subagentId?: string
+  providerMetadata?: ProviderMetadata
 }
 
 export type MessagePart = TextPart | ReasoningPart | ToolCallPart

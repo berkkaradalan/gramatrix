@@ -5,7 +5,15 @@ import type { ProviderId, ProviderInfo } from '@shared/types'
  * pointed at the base URL of the entry.
  */
 export type ProviderTransport =
-  'anthropic' | 'openai' | 'openrouter' | 'openai-compatible' | 'anthropic-compatible'
+  | 'anthropic'
+  | 'openai'
+  | 'openrouter'
+  | 'openai-compatible'
+  | 'anthropic-compatible'
+  | 'google'
+  | 'xai'
+  | 'deepseek'
+  | 'mistral'
 
 export interface ProviderEntry extends ProviderInfo {
   transport: ProviderTransport
@@ -14,7 +22,23 @@ export interface ProviderEntry extends ProviderInfo {
   modelsDevId: string
   /** When set, no other model is ever offered, whatever a model list says. */
   allowedModels?: readonly string[]
+  /**
+   * Sends stored reasoning and provider data back on later requests. Set it for providers that
+   * fail or lose context without it. See `HistoryOptions` in src/host/agent/history.ts.
+   */
+  replaysReasoning?: boolean
+  /** Model ids to leave out of a live list, for providers that list image or audio models too. */
+  excludeModels?: RegExp
+  /** Mistral only accepts tool call ids of nine letters and digits. */
+  nineCharacterToolCallIds?: boolean
 }
+
+/**
+ * Ids of models that cannot chat, for lists that mix them in. Matched as whole parts of an id, so
+ * "qwen3-tts-flash" is caught but a name that merely contains "live" is not.
+ */
+const NON_CHAT_MODEL_IDS =
+  /(^|[-_/.])(embedding|embed|audio|tts|asr|whisper|transcribe|realtime|live|image|imagine|imagen|video|veo|ocr|rerank|moderation|paraformer|cosyvoice|sambert|wanx)([-_/.\d]|$)/i
 
 /** The only models the GLM plans accept. Anything else fails with error 1113. */
 const GLM_CODING_PLAN_MODELS = ['glm-5.3', 'glm-5.3-flash']
@@ -49,6 +73,63 @@ export const PROVIDERS: readonly ProviderEntry[] = [
     defaultModel: 'gpt-6.1-sol'
   },
   {
+    id: 'gemini',
+    label: 'Gemini (Google AI Studio)',
+    kind: 'api',
+    logo: 'google',
+    hint: 'An API key from Google AI Studio. Google AI Pro or Ultra plans and Vertex AI keys do not work here.',
+    keyUrl: 'https://aistudio.google.com/apikey',
+    transport: 'google',
+    baseUrl: 'https://generativelanguage.googleapis.com/v1beta',
+    modelsDevId: 'google',
+    defaultModel: 'gemini-3.8-flash',
+    // Gemini 3 checks the thought signatures of earlier tool calls.
+    replaysReasoning: true,
+    excludeModels: NON_CHAT_MODEL_IDS
+  },
+  {
+    id: 'xai',
+    label: 'Grok (xAI)',
+    kind: 'api',
+    logo: 'xai',
+    hint: 'An API key from the xAI Console, with prepaid credits. A SuperGrok or X subscription does not work here.',
+    keyUrl: 'https://console.x.ai/team/default/api-keys',
+    transport: 'xai',
+    baseUrl: 'https://api.x.ai/v1',
+    modelsDevId: 'xai',
+    defaultModel: 'grok-4.7',
+    // Grok reasoning comes back encrypted, and later requests need it to keep their context.
+    replaysReasoning: true,
+    excludeModels: NON_CHAT_MODEL_IDS
+  },
+  {
+    id: 'deepseek',
+    label: 'DeepSeek API',
+    kind: 'api',
+    logo: 'deepseek',
+    hint: 'A pay as you go key from the DeepSeek Platform. Add balance before your first request.',
+    keyUrl: 'https://platform.deepseek.com/api_keys',
+    transport: 'deepseek',
+    baseUrl: 'https://api.deepseek.com',
+    modelsDevId: 'deepseek',
+    defaultModel: 'deepseek-flash',
+    // With tools, DeepSeek rejects a conversation whose earlier turns lost their reasoning.
+    replaysReasoning: true
+  },
+  {
+    id: 'mistral',
+    label: 'Mistral AI',
+    kind: 'api',
+    logo: 'mistral',
+    hint: 'An API key from Mistral AI Studio. The free plan works, with lower limits.',
+    keyUrl: 'https://console.mistral.ai/api-keys',
+    transport: 'mistral',
+    baseUrl: 'https://api.mistral.ai/v1',
+    modelsDevId: 'mistral',
+    defaultModel: 'mistral-large-latest',
+    nineCharacterToolCallIds: true
+  },
+  {
     id: 'openrouter',
     label: 'OpenRouter',
     kind: 'api',
@@ -71,6 +152,21 @@ export const PROVIDERS: readonly ProviderEntry[] = [
     baseUrl: 'https://api.z.ai/api/paas/v4',
     modelsDevId: 'zai',
     defaultModel: 'glm-5.3'
+  },
+  {
+    id: 'alibaba',
+    label: 'Qwen (Alibaba Cloud)',
+    kind: 'api',
+    logo: 'alibaba',
+    hint: 'A pay as you go key from Alibaba Cloud Model Studio, Singapore region. Keys from other regions and Coding Plan keys do not work here.',
+    keyUrl: 'https://modelstudio.console.alibabacloud.com/ap-southeast-1/settings/api-key',
+    transport: 'openai-compatible',
+    baseUrl: 'https://dashscope-intl.aliyuncs.com/compatible-mode/v1',
+    modelsDevId: 'alibaba',
+    defaultModel: 'qwen3.7-plus',
+    // Thinking is on by default, and newer models need it back with tools.
+    replaysReasoning: true,
+    excludeModels: NON_CHAT_MODEL_IDS
   },
   {
     id: 'minimax',
@@ -179,7 +275,22 @@ const WRONG_ENTRY_HINTS: {
   {
     provider: 'alibaba-coding-plan',
     matches: (key) => !key.startsWith('sk-sp-'),
-    hint: 'Coding Plan keys start with sk-sp-. General Model Studio keys do not belong here.'
+    hint: 'Coding Plan keys start with sk-sp-. A pay as you go key belongs under Qwen (Alibaba Cloud).'
+  },
+  {
+    provider: 'alibaba',
+    matches: (key) => key.startsWith('sk-sp-'),
+    hint: 'This looks like a Coding Plan key. Add it under Alibaba Coding Plan instead.'
+  },
+  {
+    provider: 'alibaba',
+    matches: (key) => !key.startsWith('sk-sp-'),
+    hint: 'Keys only work in the region they were made in. This entry uses Singapore.'
+  },
+  {
+    provider: 'gemini',
+    matches: (key) => !key.startsWith('AQ.') && !key.startsWith('AIza'),
+    hint: 'Keys from Google AI Studio start with AQ. or AIza. Google Cloud credentials do not work.'
   }
 ]
 

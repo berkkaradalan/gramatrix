@@ -22,10 +22,14 @@ interface ChatModel {
 async function captureRequest(
   provider: ProviderId,
   env: Record<string, string> = {}
-): Promise<{ url: string; headers: Headers }> {
-  const requests: { url: string; headers: Headers }[] = []
+): Promise<{ url: string; headers: Headers; body: string }> {
+  const requests: { url: string; headers: Headers; body: string }[] = []
   vi.stubGlobal('fetch', async (url: unknown, init: RequestInit) => {
-    requests.push({ url: String(url), headers: new Headers(init.headers) })
+    requests.push({
+      url: String(url),
+      headers: new Headers(init.headers),
+      body: typeof init.body === 'string' ? init.body : ''
+    })
     return new Response('{}', { status: 500 })
   })
   const resolve = createModelResolver(getSecretWith('the-key'), env)
@@ -99,6 +103,21 @@ describe('wrongEntryHint', () => {
     expect(wrongEntryHint('alibaba-coding-plan', 'sk-sp-123')).toBeNull()
   })
 
+  it('sends an Alibaba Coding Plan key to its own entry, and a regular key to Qwen', () => {
+    expect(wrongEntryHint('alibaba', 'sk-sp-123')).toContain('Alibaba Coding Plan')
+    expect(wrongEntryHint('alibaba-coding-plan', 'sk-ws-123')).toContain('Qwen (Alibaba Cloud)')
+  })
+
+  it('reminds that Qwen keys belong to one region', () => {
+    expect(wrongEntryHint('alibaba', 'sk-ws-123')).toContain('Singapore')
+  })
+
+  it('flags a Gemini key that is not from Google AI Studio', () => {
+    expect(wrongEntryHint('gemini', 'ya29.cloud-token')).toContain('AQ. or AIza')
+    expect(wrongEntryHint('gemini', 'AQ.studio-key')).toBeNull()
+    expect(wrongEntryHint('gemini', 'AIzaSyStudio')).toBeNull()
+  })
+
   it('stays quiet for providers with a single entry', () => {
     expect(wrongEntryHint('openai', 'anything')).toBeNull()
   })
@@ -115,7 +134,15 @@ describe('createModelResolver', () => {
     ['zhipu-coding-plan', 'https://open.bigmodel.cn/api/coding/paas/v4/chat/completions'],
     ['minimax-coding-plan', 'https://api.minimax.io/anthropic/v1/messages'],
     ['kimi-coding-plan', 'https://api.kimi.ai/coding/v1/chat/completions'],
-    ['alibaba-coding-plan', 'https://coding-intl.dashscope.aliyuncs.com/v1/chat/completions']
+    ['alibaba-coding-plan', 'https://coding-intl.dashscope.aliyuncs.com/v1/chat/completions'],
+    [
+      'gemini',
+      'https://generativelanguage.googleapis.com/v1beta/models/some-model:generateContent'
+    ],
+    ['xai', 'https://api.x.ai/v1/responses'],
+    ['deepseek', 'https://api.deepseek.com/chat/completions'],
+    ['mistral', 'https://api.mistral.ai/v1/chat/completions'],
+    ['alibaba', 'https://dashscope-intl.aliyuncs.com/compatible-mode/v1/chat/completions']
   ])('sends %s to its endpoint', async (provider, url) => {
     expect((await captureRequest(provider)).url).toBe(url)
   })
@@ -127,13 +154,30 @@ describe('createModelResolver', () => {
     }
   )
 
-  it.each<ProviderId>(['openai', 'zai', 'zai-coding-plan', 'kimi-coding-plan'])(
-    'authenticates %s with a bearer token',
-    async (provider) => {
-      const { headers } = await captureRequest(provider)
-      expect(headers.get('authorization')).toBe('Bearer the-key')
-    }
-  )
+  it.each<ProviderId>([
+    'openai',
+    'zai',
+    'zai-coding-plan',
+    'kimi-coding-plan',
+    'xai',
+    'deepseek',
+    'mistral',
+    'alibaba'
+  ])('authenticates %s with a bearer token', async (provider) => {
+    const { headers } = await captureRequest(provider)
+    expect(headers.get('authorization')).toBe('Bearer the-key')
+  })
+
+  it('authenticates Gemini with its own header, never in the URL', async () => {
+    const { url, headers } = await captureRequest('gemini')
+    expect(headers.get('x-goog-api-key')).toBe('the-key')
+    expect(url).not.toContain('the-key')
+  })
+
+  it('asks xAI not to store requests, which teams with zero data retention require', async () => {
+    const { body } = await captureRequest('xai')
+    expect(JSON.parse(body)).toMatchObject({ store: false })
+  })
 
   it('explains a missing key', async () => {
     const resolve = createModelResolver(getSecretWith(null), {})

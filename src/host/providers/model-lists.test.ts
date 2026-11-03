@@ -498,4 +498,109 @@ describe('ModelLists', () => {
       expect(network.urls()).toEqual([])
     })
   })
+
+  describe('providers with their own list format', () => {
+    const ids = async (lists: ModelLists, provider: ProviderId): Promise<string[]> =>
+      (await lists.list(provider)).models.map(({ id }) => id).sort()
+
+    it('reads every page of the Gemini list and keeps models that generate content', async () => {
+      const lists = await setUp({ gemini: 'g-key' })
+      const base = 'https://generativelanguage.googleapis.com/v1beta/models?pageSize=1000'
+      network.routes.set(base, {
+        body: {
+          models: [
+            {
+              name: 'models/gemini-3.8-flash',
+              displayName: 'Gemini 3.8 Flash',
+              supportedGenerationMethods: ['generateContent', 'countTokens']
+            },
+            { name: 'models/gemini-embedding-001', supportedGenerationMethods: ['embedContent'] }
+          ],
+          nextPageToken: 'next'
+        }
+      })
+      network.routes.set(`${base}&pageToken=next`, {
+        body: {
+          models: [
+            { name: 'models/gemini-4-argon', supportedGenerationMethods: ['generateContent'] },
+            {
+              name: 'models/gemini-3.5-flash-image',
+              supportedGenerationMethods: ['generateContent']
+            },
+            {
+              name: 'models/gemini-3.5-flash-preview-tts',
+              supportedGenerationMethods: ['generateContent']
+            }
+          ]
+        }
+      })
+
+      const list = await lists.list('gemini')
+
+      expect(list.source).toBe('live')
+      expect(list.models.map(({ id }) => id).sort()).toEqual(['gemini-3.8-flash', 'gemini-4-argon'])
+      expect(network.requests[0]?.headers.get('x-goog-api-key')).toBe('g-key')
+      expect(network.requests[0]?.headers.get('authorization')).toBeNull()
+    })
+
+    it('keeps Mistral models that can chat and call tools, even without a display name', async () => {
+      const lists = await setUp({ mistral: 'm-key' })
+      network.routes.set('https://api.mistral.ai/v1/models', {
+        body: {
+          object: 'list',
+          data: [
+            {
+              id: 'mistral-large-latest',
+              name: null,
+              capabilities: { completion_chat: true, function_calling: true }
+            },
+            {
+              id: 'mistral-embed',
+              name: 'Embed',
+              capabilities: { completion_chat: false, function_calling: false }
+            },
+            {
+              id: 'mistral-ocr-latest',
+              capabilities: { completion_chat: true, function_calling: false }
+            }
+          ]
+        }
+      })
+
+      expect(await ids(lists, 'mistral')).toEqual(['mistral-large-latest'])
+      expect(network.requests[0]?.headers.get('authorization')).toBe('Bearer m-key')
+    })
+
+    it('leaves image, video and audio models out of the xAI and Qwen lists', async () => {
+      const lists = await setUp({ xai: 'x-key', alibaba: 'a-key' })
+      network.routes.set('https://api.x.ai/v1/models', {
+        body: {
+          data: [{ id: 'grok-4.7' }, { id: 'grok-imagine-video' }, { id: 'grok-imagine-image' }]
+        }
+      })
+      network.routes.set('https://dashscope-intl.aliyuncs.com/compatible-mode/v1/models', {
+        body: {
+          data: [
+            { id: 'qwen3.7-plus' },
+            { id: 'qwen3-tts-flash' },
+            { id: 'text-embedding-v4' },
+            { id: 'qwen-vl-ocr' },
+            { id: 'wanx2.1-t2i-turbo' },
+            { id: 'qwen3-coder-plus' }
+          ]
+        }
+      })
+
+      expect(await ids(lists, 'xai')).toEqual(['grok-4.7'])
+      expect(await ids(lists, 'alibaba')).toEqual(['qwen3-coder-plus', 'qwen3.7-plus'])
+    })
+
+    it('reads the DeepSeek list the OpenAI way', async () => {
+      const lists = await setUp({ deepseek: 'd-key' })
+      network.routes.set('https://api.deepseek.com/models', {
+        body: { object: 'list', data: [{ id: 'deepseek-flash' }, { id: 'deepseek-v4-pro' }] }
+      })
+      expect(await ids(lists, 'deepseek')).toEqual(['deepseek-flash', 'deepseek-v4-pro'])
+    })
+  })
 })

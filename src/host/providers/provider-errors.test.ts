@@ -144,6 +144,13 @@ describe('providers.test against a server', () => {
     server = createServer((request, response) => {
       request.resume()
       request.on('end', () => {
+        // The key test streams, so a success comes back as server sent events.
+        if (status === 200 && Array.isArray(body)) {
+          response.writeHead(200, { 'content-type': 'text/event-stream' })
+          for (const chunk of body) response.write(`data: ${JSON.stringify(chunk)}\n\n`)
+          response.end('data: [DONE]\n\n')
+          return
+        }
         response.writeHead(status, { 'content-type': 'application/json' })
         response.end(JSON.stringify(body))
       })
@@ -214,14 +221,124 @@ describe('providers.test against a server', () => {
   })
 
   it('reports endpoint and model on success', async () => {
-    const result = await testAgainst('zai', 'key', 200, {
-      id: '1',
-      choices: [{ index: 0, message: { role: 'assistant', content: 'ok' }, finish_reason: 'stop' }]
-    })
+    const result = await testAgainst('zai', 'key', 200, [
+      { id: '1', choices: [{ index: 0, delta: { role: 'assistant', content: 'ok' } }] },
+      { id: '1', choices: [{ index: 0, delta: {}, finish_reason: 'stop' }] }
+    ])
     expect(result.ok).toBe(true)
     expect(result.error).toBeUndefined()
     expect(result.details?.model).toBe('glm-5.3')
     expect(result.details?.endpoint).toContain('127.0.0.1')
+  })
+
+  // Bodies below were recorded from the real endpoints without a key, or come from the
+  // providers' documentation. See docs/providers.md.
+  it.each<[ProviderId, number, unknown, string]>([
+    [
+      'gemini',
+      400,
+      {
+        error: {
+          code: 400,
+          message: 'API key not valid. Please pass a valid API key.',
+          status: 'INVALID_ARGUMENT',
+          details: [
+            { '@type': 'type.googleapis.com/google.rpc.ErrorInfo', reason: 'API_KEY_INVALID' }
+          ]
+        }
+      },
+      'Google did not accept this key (API_KEY_INVALID)'
+    ],
+    [
+      'gemini',
+      401,
+      {
+        error: {
+          code: 401,
+          message: 'Request had invalid authentication.',
+          status: 'UNAUTHENTICATED'
+        }
+      },
+      'Google did not accept this key'
+    ],
+    [
+      'gemini',
+      429,
+      {
+        error: {
+          code: 429,
+          message: 'Quota exceeded for metric generate_content_free_tier_requests, limit: 0',
+          status: 'RESOURCE_EXHAUSTED'
+        }
+      },
+      'is not part of the free tier'
+    ],
+    [
+      'xai',
+      400,
+      {
+        code: 'invalid-argument',
+        error: 'Incorrect API key provided. You can obtain an API key from https://console.x.ai.'
+      },
+      'Grok (xAI) did not accept this key'
+    ],
+    [
+      'xai',
+      403,
+      {
+        code: 'The caller does not have permission to execute the specified operation',
+        error: "Your newly created teams doesn't have any credits yet."
+      },
+      'Your xAI team has no credits'
+    ],
+    ['mistral', 401, { detail: 'Invalid API Key' }, 'Mistral AI did not accept this key'],
+    [
+      'deepseek',
+      402,
+      {
+        error: {
+          message: 'Insufficient Balance',
+          type: 'unknown_error',
+          param: null,
+          code: 'invalid_request_error'
+        }
+      },
+      'DeepSeek API reports no credit'
+    ],
+    [
+      'alibaba',
+      401,
+      {
+        error: {
+          message: 'Incorrect API key provided.',
+          type: 'invalid_request_error',
+          param: null,
+          code: 'invalid_api_key'
+        }
+      },
+      'Keys only work in the region they were made in'
+    ],
+    [
+      'alibaba',
+      403,
+      { error: { message: 'Free quota exhausted.', code: 'AllocationQuota.FreeTierOnly' } },
+      'The free quota for'
+    ],
+    [
+      'alibaba',
+      400,
+      { error: { message: 'Access denied, account is in arrears.', code: 'Arrearage' } },
+      'no balance'
+    ]
+  ])('explains a %s %i in plain words', async (provider, status, body, advice) => {
+    const result = await testAgainst(provider, 'a-key', status, body)
+    expect(result.ok).toBe(false)
+    expect(result.error).toContain(advice)
+  })
+
+  it('keeps the message of a Mistral error that only has a detail', async () => {
+    const result = await testAgainst('mistral', 'a-key', 401, { detail: 'Invalid API Key' })
+    expect(result.details?.message).toBe('Invalid API Key')
   })
 
   it('explains a missing key', async () => {

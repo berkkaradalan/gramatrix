@@ -16,6 +16,8 @@ export interface ScriptedStep {
   error?: string
   /** Never responds until the request is aborted. */
   hang?: boolean
+  /** Provider data sent with the reasoning and every tool call, like a thought signature. */
+  providerMetadata?: Record<string, Record<string, string>>
 }
 
 /** Every scripted step reports these tokens. */
@@ -45,7 +47,7 @@ function streamParts(step: ScriptedStep): unknown[] {
       ? [
           { type: 'reasoning-start', id: 'r' },
           { type: 'reasoning-delta', id: 'r', delta: step.reasoning },
-          { type: 'reasoning-end', id: 'r' }
+          { type: 'reasoning-end', id: 'r', providerMetadata: step.providerMetadata }
         ]
       : []),
     ...(step.text
@@ -55,7 +57,11 @@ function streamParts(step: ScriptedStep): unknown[] {
           { type: 'text-end', id: 't' }
         ]
       : []),
-    ...callsOf(step).map((call) => ({ type: 'tool-call', ...call })),
+    ...callsOf(step).map((call) => ({
+      type: 'tool-call',
+      ...call,
+      providerMetadata: step.providerMetadata
+    })),
     { type: 'finish', usage: STEP_USAGE, finishReason: finishReason(step) }
   ]
 }

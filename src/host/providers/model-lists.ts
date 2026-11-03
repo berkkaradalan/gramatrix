@@ -11,14 +11,46 @@ export const MODEL_LIST_CACHE_MS = 60 * 60 * 1000
 export const MODELS_DEV_URL = 'https://models.dev/api.json'
 const REQUEST_TIMEOUT_MS = 8000
 const ANTHROPIC_API_VERSION = '2023-06-01'
-const MAX_ANTHROPIC_PAGES = 10
+/** Bounds paged lists, in case a provider keeps returning a next page. */
+const MAX_LIST_PAGES = 10
 
 /** The OpenAI list also holds models that cannot chat, and it has no field that says so. */
 const OPENAI_NON_CHAT_MODEL =
   /embedding|audio|tts|whisper|image|moderation|realtime|transcribe|dall-e|sora|davinci|babbage/i
 
 const openAiListSchema = z.object({
-  data: z.array(z.looseObject({ id: z.string(), name: z.string().optional() }))
+  // Mistral sends null for a model without a display name.
+  data: z.array(z.looseObject({ id: z.string(), name: z.string().nullish() }))
+})
+
+/** Mistral lists embedding, OCR and audio models too, and says what each one can do. */
+const mistralListSchema = z.object({
+  data: z.array(
+    z.looseObject({
+      id: z.string(),
+      name: z.string().nullish(),
+      capabilities: z
+        .looseObject({
+          completion_chat: z.boolean().optional(),
+          function_calling: z.boolean().optional()
+        })
+        .optional()
+    })
+  )
+})
+
+/** Gemini names models "models/<id>" and says which ones can generate content. */
+const googleListSchema = z.object({
+  models: z
+    .array(
+      z.looseObject({
+        name: z.string(),
+        displayName: z.string().optional(),
+        supportedGenerationMethods: z.array(z.string()).optional()
+      })
+    )
+    .optional(),
+  nextPageToken: z.string().optional()
 })
 
 const anthropicListSchema = z.object({
@@ -171,6 +203,8 @@ export class ModelLists {
     if (entry.transport === 'openai') {
       return models.filter((model) => !OPENAI_NON_CHAT_MODEL.test(model.id))
     }
+    const { excludeModels } = entry
+    if (excludeModels) return models.filter((model) => !excludeModels.test(model.id))
     const allowed = entry.allowedModels?.map((id) => id.toLowerCase())
     if (!allowed) return models
     return models.filter((model) => allowed.includes(model.id.toLowerCase()))
@@ -183,21 +217,65 @@ export class ModelLists {
     const apiKey = await this.dependencies.getSecret(secretName.provider(entry.id))
     if (!apiKey) return []
     if (override) return this.fetchOpenAiStyle(override, apiKey)
-    return entry.transport === 'anthropic' || entry.transport === 'anthropic-compatible'
-      ? this.fetchAnthropicStyle(entry.baseUrl, apiKey)
-      : this.fetchOpenAiStyle(entry.baseUrl, apiKey)
+    switch (entry.transport) {
+      case 'anthropic':
+      case 'anthropic-compatible':
+        return this.fetchAnthropicStyle(entry.baseUrl, apiKey)
+      case 'google':
+        return this.fetchGoogle(entry.baseUrl, apiKey)
+      case 'mistral':
+        return this.fetchMistral(entry.baseUrl, apiKey)
+      default:
+        return this.fetchOpenAiStyle(entry.baseUrl, apiKey)
+    }
   }
 
   private async fetchOpenAiStyle(baseUrl: string, apiKey: string): Promise<LiveModel[]> {
     const data = await this.getJson(`${baseUrl}/models`, { authorization: `Bearer ${apiKey}` })
-    return openAiListSchema.safeParse(data).data?.data ?? []
+    return (openAiListSchema.safeParse(data).data?.data ?? []).map(({ id, name }) => ({
+      id,
+      name: name ?? undefined
+    }))
+  }
+
+  /** Keeps models that can chat and call tools. A model that does not say counts as able to. */
+  private async fetchMistral(baseUrl: string, apiKey: string): Promise<LiveModel[]> {
+    const data = await this.getJson(`${baseUrl}/models`, { authorization: `Bearer ${apiKey}` })
+    return (mistralListSchema.safeParse(data).data?.data ?? [])
+      .filter(
+        ({ capabilities }) =>
+          capabilities?.completion_chat !== false && capabilities?.function_calling !== false
+      )
+      .map(({ id, name }) => ({ id, name: name ?? undefined }))
+  }
+
+  /**
+   * Gemini answers 200 for any existing key, whatever its quota, so this list says nothing about
+   * whether requests will work. The key test does that.
+   */
+  private async fetchGoogle(baseUrl: string, apiKey: string): Promise<LiveModel[]> {
+    const models: LiveModel[] = []
+    let pageToken: string | undefined
+    for (let page = 0; page < MAX_LIST_PAGES; page++) {
+      const query = `pageSize=1000${pageToken ? `&pageToken=${encodeURIComponent(pageToken)}` : ''}`
+      const data = await this.getJson(`${baseUrl}/models?${query}`, { 'x-goog-api-key': apiKey })
+      const parsed = googleListSchema.safeParse(data)
+      if (!parsed.success) break
+      for (const model of parsed.data.models ?? []) {
+        if (!model.supportedGenerationMethods?.includes('generateContent')) continue
+        models.push({ id: model.name.replace(/^models\//, ''), name: model.displayName })
+      }
+      pageToken = parsed.data.nextPageToken
+      if (!pageToken) break
+    }
+    return models
   }
 
   private async fetchAnthropicStyle(baseUrl: string, apiKey: string): Promise<LiveModel[]> {
     const headers = { 'x-api-key': apiKey, 'anthropic-version': ANTHROPIC_API_VERSION }
     const models: LiveModel[] = []
     let afterId: string | null | undefined
-    for (let page = 0; page < MAX_ANTHROPIC_PAGES; page++) {
+    for (let page = 0; page < MAX_LIST_PAGES; page++) {
       const query = `limit=1000${afterId ? `&after_id=${encodeURIComponent(afterId)}` : ''}`
       const data = await this.getJson(`${baseUrl}/models?${query}`, headers)
       const parsed = anthropicListSchema.safeParse(data)

@@ -783,6 +783,969 @@
       }
     }
   },
+  "google": {
+    "models": {
+      "deep-research-max-preview-04-2026": {
+        "id": "deep-research-max-preview-04-2026",
+        "name": "Deep Research Max Preview (Apr-21-2026)",
+        "tool_call": true,
+        "reasoning": true,
+        "limit": {
+          "context": 131072
+        },
+        "cost": {
+          "input": 2,
+          "output": 12,
+          "cache_read": 0.2
+        }
+      },
+      "deep-research-preview-04-2026": {
+        "id": "deep-research-preview-04-2026",
+        "name": "Deep Research Preview (Apr-21-2026)",
+        "tool_call": true,
+        "reasoning": true,
+        "limit": {
+          "context": 131072
+        },
+        "cost": {
+          "input": 2,
+          "output": 12,
+          "cache_read": 0.2
+        }
+      },
+      "gemini-2.5-computer-use-preview-10-2025": {
+        "id": "gemini-2.5-computer-use-preview-10-2025",
+        "name": "Gemini 2.5 Computer Use Preview 10-2025",
+        "tool_call": true,
+        "reasoning": true,
+        "limit": {
+          "context": 128000
+        },
+        "cost": {
+          "input": 1.25,
+          "output": 10
+        }
+      },
+      "gemini-2.5-flash": {
+        "id": "gemini-2.5-flash",
+        "name": "Gemini 2.5 Flash",
+        "tool_call": true,
+        "reasoning": true,
+        "limit": {
+          "context": 1048576
+        },
+        "cost": {
+          "input": 0.3,
+          "output": 2.5,
+          "cache_read": 0.03
+        }
+      },
+      "gemini-2.5-flash-lite": {
+        "id": "gemini-2.5-flash-lite",
+        "name": "Gemini 2.5 Flash-Lite",
+        "tool_call": true,
+        "reasoning": true,
+        "limit": {
+          "context": 1048576
+        },
+        "cost": {
+          "input": 0.1,
+          "output": 0.4,
+          "cache_read": 0.01
+        }
+      },
+      "gemini-2.5-flash-preview-tts": {
+        "id": "gemini-2.5-flash-preview-tts",
+        "name": "Gemini 2.5 Flash Preview TTS",
+        "tool_call": false,
+        "reasoning": false,
+        "limit": {
+          "context": 8192
+        },
+        "cost": {
+          "input": 0.5,
+          "output": 10
+        }
+      },
+      "gemini-2.5-pro": {
+        "id": "gemini-2.5-pro",
+        "name": "Gemini 2.5 Pro",
+        "tool_call": true,
+        "reasoning": true,
+        "limit": {
+          "context": 1048576
+        },
+        "cost": {
+          "input": 1.25,
+          "output": 10,
+          "cache_read": 0.125
+        }
+      },
+      "gemini-2.5-pro-preview-tts": {
+        "id": "gemini-2.5-pro-preview-tts",
+        "name": "Gemini 2.5 Pro Preview TTS",
+        "tool_call": false,
+        "reasoning": false,
+        "limit": {
+          "context": 8192
+        },
+        "cost": {
+          "input": 1,
+          "output": 20
+        }
+      },
+      "gemini-3-flash-preview": {
+        "id": "gemini-3-flash-preview",
+        "name": "Gemini 3 Flash Preview",
+        "tool_call": true,
+        "reasoning": true,
+        "limit": {
+          "context": 1048576
+        },
+        "cost": {
+          "input": 0.5,
+          "output": 3,
+          "cache_read": 0.05
+        }
+      },
+      "gemini-3-pro-image": {
+        "id": "gemini-3-pro-image",
+        "name": "Nano Banana Pro",
+        "tool_call": false,
+        "reasoning": true,
+        "limit": {
+          "context": 65536
+        },
+        "cost": {
+          "input": 2,
+          "output": 120
+        }
+      },
+      "gemini-3.1-flash-image": {
+        "id": "gemini-3.1-flash-image",
+        "name": "Nano Banana 2",
+        "tool_call": false,
+        "reasoning": true,
+        "limit": {
+          "context": 131072
+        },
+        "cost": {
+          "input": 0.5,
+          "output": 60
+        }
+      },
+      "gemini-3.1-flash-lite": {
+        "id": "gemini-3.1-flash-lite",
+        "name": "Gemini 3.1 Flash Lite",
+        "tool_call": true,
+        "reasoning": true,
+        "limit": {
+          "context": 1048576
+        },
+        "cost": {
+          "input": 0.25,
+          "output": 1.5,
+          "cache_read": 0.025
+        }
+      },
+      "gemini-3.1-flash-lite-image": {
+        "id": "gemini-3.1-flash-lite-image",
+        "name": "Nano Banana 2 Lite",
+        "tool_call": true,
+        "reasoning": true,
+        "limit": {
+          "context": 65536
+        },
+        "cost": {
+          "input": 0.25,
+          "output": 30
+        }
+      },
+      "gemini-3.1-flash-live-preview": {
+        "id": "gemini-3.1-flash-live-preview",
+        "name": "Gemini 3.1 Flash Live Preview",
+        "tool_call": true,
+        "reasoning": true,
+        "limit": {
+          "context": 131072
+        },
+        "cost": {
+          "input": 0.75,
+          "output": 4.5
+        }
+      },
+      "gemini-3.1-flash-tts-preview": {
+        "id": "gemini-3.1-flash-tts-preview",
+        "name": "Gemini 3.1 Flash TTS Preview",
+        "tool_call": false,
+        "reasoning": true,
+        "limit": {
+          "context": 8192
+        },
+        "cost": {
+          "input": 1,
+          "output": 20
+        }
+      },
+      "gemini-3.1-pro-preview": {
+        "id": "gemini-3.1-pro-preview",
+        "name": "Gemini 3.1 Pro Preview",
+        "tool_call": true,
+        "reasoning": true,
+        "limit": {
+          "context": 1048576
+        },
+        "cost": {
+          "input": 2,
+          "output": 12,
+          "cache_read": 0.2
+        }
+      },
+      "gemini-3.1-pro-preview-customtools": {
+        "id": "gemini-3.1-pro-preview-customtools",
+        "name": "Gemini 3.1 Pro Preview Custom Tools",
+        "tool_call": true,
+        "reasoning": true,
+        "limit": {
+          "context": 1048576
+        },
+        "cost": {
+          "input": 2,
+          "output": 12,
+          "cache_read": 0.2
+        }
+      },
+      "gemini-3.5-flash": {
+        "id": "gemini-3.5-flash",
+        "name": "Gemini 3.5 Flash",
+        "tool_call": true,
+        "reasoning": true,
+        "limit": {
+          "context": 1048576
+        },
+        "cost": {
+          "input": 1.5,
+          "output": 9,
+          "cache_read": 0.15
+        }
+      },
+      "gemini-3.5-flash-lite": {
+        "id": "gemini-3.5-flash-lite",
+        "name": "Gemini 3.5 Flash Lite",
+        "tool_call": true,
+        "reasoning": true,
+        "limit": {
+          "context": 1048576
+        },
+        "cost": {
+          "input": 0.3,
+          "output": 2.5,
+          "cache_read": 0.03
+        }
+      },
+      "gemini-3.5-live-translate-preview": {
+        "id": "gemini-3.5-live-translate-preview",
+        "name": "Gemini 3.5 Live Translate Preview",
+        "tool_call": false,
+        "reasoning": false,
+        "limit": {
+          "context": 16384
+        },
+        "cost": {
+          "input": 3.5,
+          "output": 21
+        }
+      },
+      "gemini-3.6-flash": {
+        "id": "gemini-3.6-flash",
+        "name": "Gemini 3.6 Flash",
+        "tool_call": true,
+        "reasoning": true,
+        "limit": {
+          "context": 1048576
+        },
+        "cost": {
+          "input": 0.75,
+          "output": 3.75,
+          "cache_read": 0.075
+        }
+      },
+      "gemini-3.7-flash": {
+        "id": "gemini-3.7-flash",
+        "name": "Gemini 3.7 Flash",
+        "tool_call": true,
+        "reasoning": true,
+        "limit": {
+          "context": 1048576
+        },
+        "cost": {
+          "input": 0.75,
+          "output": 3.75,
+          "cache_read": 0.075
+        }
+      },
+      "gemini-3.8-flash": {
+        "id": "gemini-3.8-flash",
+        "name": "Gemini 3.8 Flash",
+        "tool_call": true,
+        "reasoning": true,
+        "limit": {
+          "context": 1048576
+        },
+        "cost": {
+          "input": 0.75,
+          "output": 3.75,
+          "cache_read": 0.075
+        }
+      },
+      "gemini-4-argon": {
+        "id": "gemini-4-argon",
+        "name": "Gemini 4 Argon",
+        "tool_call": true,
+        "reasoning": true,
+        "limit": {
+          "context": 1048576
+        },
+        "cost": {
+          "input": 2,
+          "output": 10,
+          "cache_read": 0.1
+        }
+      },
+      "gemini-embedding-001": {
+        "id": "gemini-embedding-001",
+        "name": "Gemini Embedding 001",
+        "tool_call": false,
+        "reasoning": false,
+        "limit": {
+          "context": 2048
+        },
+        "cost": {
+          "input": 0.15,
+          "output": 0
+        }
+      },
+      "gemini-embedding-2": {
+        "id": "gemini-embedding-2",
+        "name": "Gemini Embedding 2",
+        "tool_call": false,
+        "reasoning": false,
+        "limit": {
+          "context": 8192
+        },
+        "cost": {
+          "input": 0.2,
+          "output": 0
+        }
+      },
+      "gemini-flash-latest": {
+        "id": "gemini-flash-latest",
+        "name": "Gemini Flash Latest",
+        "tool_call": true,
+        "reasoning": true,
+        "limit": {
+          "context": 1048576
+        },
+        "cost": {
+          "input": 0.75,
+          "output": 3.75,
+          "cache_read": 0.075
+        }
+      },
+      "gemini-flash-lite-latest": {
+        "id": "gemini-flash-lite-latest",
+        "name": "Gemini Flash-Lite Latest",
+        "tool_call": true,
+        "reasoning": true,
+        "limit": {
+          "context": 1048576
+        },
+        "cost": {
+          "input": 0.3,
+          "output": 2.5,
+          "cache_read": 0.03
+        }
+      },
+      "gemini-omni-flash-preview": {
+        "id": "gemini-omni-flash-preview",
+        "name": "Gemini Omni Flash Preview",
+        "tool_call": false,
+        "reasoning": true,
+        "limit": {
+          "context": 131072
+        },
+        "cost": {
+          "input": 1.5,
+          "output": 17.5
+        }
+      },
+      "gemini-pro-latest": {
+        "id": "gemini-pro-latest",
+        "name": "Gemini Pro Latest",
+        "tool_call": true,
+        "reasoning": true,
+        "limit": {
+          "context": 1048576
+        },
+        "cost": {
+          "input": 2,
+          "output": 12,
+          "cache_read": 0.2
+        }
+      },
+      "gemma-4-26b-a4b-it": {
+        "id": "gemma-4-26b-a4b-it",
+        "name": "Gemma 4 26B A4B IT",
+        "tool_call": true,
+        "reasoning": true,
+        "limit": {
+          "context": 262144
+        },
+        "cost": {}
+      },
+      "gemma-4-31b-it": {
+        "id": "gemma-4-31b-it",
+        "name": "Gemma 4 31B IT",
+        "tool_call": true,
+        "reasoning": true,
+        "limit": {
+          "context": 262144
+        },
+        "cost": {}
+      },
+      "lyria-3-clip-preview": {
+        "id": "lyria-3-clip-preview",
+        "name": "Lyria 3 Clip Preview",
+        "tool_call": false,
+        "reasoning": false,
+        "limit": {
+          "context": 1048576
+        },
+        "cost": {
+          "input": 0,
+          "output": 0
+        }
+      },
+      "lyria-3-pro-preview": {
+        "id": "lyria-3-pro-preview",
+        "name": "Lyria 3 Pro Preview",
+        "tool_call": false,
+        "reasoning": false,
+        "limit": {
+          "context": 1048576
+        },
+        "cost": {
+          "input": 0,
+          "output": 0
+        }
+      }
+    }
+  },
+  "xai": {
+    "models": {
+      "grok-4.20-0309-non-reasoning": {
+        "id": "grok-4.20-0309-non-reasoning",
+        "name": "Grok 4.20 (Non-Reasoning)",
+        "tool_call": true,
+        "reasoning": false,
+        "limit": {
+          "context": 1000000
+        },
+        "cost": {
+          "input": 1.25,
+          "output": 2.5,
+          "cache_read": 0.2
+        }
+      },
+      "grok-4.20-0309-reasoning": {
+        "id": "grok-4.20-0309-reasoning",
+        "name": "Grok 4.20 (Reasoning)",
+        "tool_call": true,
+        "reasoning": true,
+        "limit": {
+          "context": 1000000
+        },
+        "cost": {
+          "input": 1.25,
+          "output": 2.5,
+          "cache_read": 0.2
+        }
+      },
+      "grok-4.20-multi-agent-0309": {
+        "id": "grok-4.20-multi-agent-0309",
+        "name": "Grok 4.20 Multi-Agent",
+        "tool_call": false,
+        "reasoning": true,
+        "limit": {
+          "context": 1000000
+        },
+        "cost": {
+          "input": 1.25,
+          "output": 2.5,
+          "cache_read": 0.2
+        }
+      },
+      "grok-4.3": {
+        "id": "grok-4.3",
+        "name": "Grok 4.3",
+        "tool_call": true,
+        "reasoning": true,
+        "limit": {
+          "context": 1000000
+        },
+        "cost": {
+          "input": 1.25,
+          "output": 2.5,
+          "cache_read": 0.2
+        }
+      },
+      "grok-4.5": {
+        "id": "grok-4.5",
+        "name": "Grok 4.5",
+        "tool_call": true,
+        "reasoning": true,
+        "limit": {
+          "context": 500000
+        },
+        "cost": {
+          "input": 2,
+          "output": 6,
+          "cache_read": 0.3
+        }
+      },
+      "grok-4.6": {
+        "id": "grok-4.6",
+        "name": "Grok 4.6",
+        "tool_call": true,
+        "reasoning": true,
+        "limit": {
+          "context": 500000
+        },
+        "cost": {
+          "input": 2,
+          "output": 6,
+          "cache_read": 0.5
+        }
+      },
+      "grok-4.7": {
+        "id": "grok-4.7",
+        "name": "Grok 4.7",
+        "tool_call": true,
+        "reasoning": true,
+        "limit": {
+          "context": 500000
+        },
+        "cost": {
+          "input": 2,
+          "output": 6,
+          "cache_read": 0.5
+        }
+      },
+      "grok-build-0.1": {
+        "id": "grok-build-0.1",
+        "name": "Grok Build 0.1",
+        "tool_call": true,
+        "reasoning": true,
+        "limit": {
+          "context": 256000
+        },
+        "cost": {
+          "input": 1,
+          "output": 2,
+          "cache_read": 0.2
+        }
+      },
+      "grok-imagine-image": {
+        "id": "grok-imagine-image",
+        "name": "Grok Imagine Image",
+        "tool_call": false,
+        "reasoning": false,
+        "limit": {
+          "context": 16000
+        },
+        "cost": {}
+      },
+      "grok-imagine-video": {
+        "id": "grok-imagine-video",
+        "name": "Grok Imagine Video",
+        "tool_call": false,
+        "reasoning": false,
+        "limit": {
+          "context": 1024
+        },
+        "cost": {}
+      },
+      "grok-imagine-video-1.5": {
+        "id": "grok-imagine-video-1.5",
+        "name": "Grok Imagine Video 1.5",
+        "tool_call": false,
+        "reasoning": false,
+        "limit": {
+          "context": 1024
+        },
+        "cost": {}
+      },
+      "grok-imagine-video-1.5-lite": {
+        "id": "grok-imagine-video-1.5-lite",
+        "name": "Grok Imagine Video 1.5 Lite",
+        "tool_call": false,
+        "reasoning": false,
+        "limit": {
+          "context": 1024
+        },
+        "cost": {}
+      }
+    }
+  },
+  "deepseek": {
+    "models": {
+      "deepseek-flash": {
+        "id": "deepseek-flash",
+        "name": "DeepSeek V4.1 Flash 1017",
+        "tool_call": true,
+        "reasoning": true,
+        "limit": {
+          "context": 1048576
+        },
+        "cost": {
+          "input": 0.15,
+          "output": 0.6,
+          "cache_read": 0.003
+        }
+      },
+      "deepseek-v4-pro": {
+        "id": "deepseek-v4-pro",
+        "name": "DeepSeek V4 Pro",
+        "tool_call": true,
+        "reasoning": true,
+        "limit": {
+          "context": 1048576
+        },
+        "cost": {
+          "input": 0.66,
+          "output": 1.98,
+          "cache_read": 0.022
+        }
+      }
+    }
+  },
+  "mistral": {
+    "models": {
+      "codestral-2508": {
+        "id": "codestral-2508",
+        "name": "Codestral 25.08",
+        "tool_call": true,
+        "reasoning": false,
+        "limit": {
+          "context": 256000
+        },
+        "cost": {
+          "input": 0.3,
+          "output": 0.9,
+          "cache_read": 0.03
+        }
+      },
+      "codestral-latest": {
+        "id": "codestral-latest",
+        "name": "Codestral (latest)",
+        "tool_call": true,
+        "reasoning": false,
+        "limit": {
+          "context": 256000
+        },
+        "cost": {
+          "input": 0.3,
+          "output": 0.9,
+          "cache_read": 0.03
+        }
+      },
+      "deepseek-v4-1-flash-1017": {
+        "id": "deepseek-v4-1-flash-1017",
+        "name": "DeepSeek V4.1 Flash 1017",
+        "tool_call": true,
+        "reasoning": true,
+        "limit": {
+          "context": 1048576
+        },
+        "cost": {
+          "input": 0.3,
+          "output": 1.2,
+          "cache_read": 0.007
+        }
+      },
+      "ministral-14b-2512": {
+        "id": "ministral-14b-2512",
+        "name": "Ministral 3 14B",
+        "tool_call": true,
+        "reasoning": false,
+        "limit": {
+          "context": 262144
+        },
+        "cost": {
+          "input": 0.2,
+          "output": 0.2,
+          "cache_read": 0.02
+        }
+      },
+      "ministral-3b-2512": {
+        "id": "ministral-3b-2512",
+        "name": "Ministral 3 3B",
+        "tool_call": true,
+        "reasoning": false,
+        "limit": {
+          "context": 131072
+        },
+        "cost": {
+          "input": 0.1,
+          "output": 0.1,
+          "cache_read": 0.01
+        }
+      },
+      "ministral-3b-latest": {
+        "id": "ministral-3b-latest",
+        "name": "Ministral 3B (latest)",
+        "tool_call": true,
+        "reasoning": false,
+        "limit": {
+          "context": 131072
+        },
+        "cost": {
+          "input": 0.1,
+          "output": 0.1,
+          "cache_read": 0.01
+        }
+      },
+      "ministral-8b-2512": {
+        "id": "ministral-8b-2512",
+        "name": "Ministral 3 8B",
+        "tool_call": true,
+        "reasoning": false,
+        "limit": {
+          "context": 262144
+        },
+        "cost": {
+          "input": 0.15,
+          "output": 0.15,
+          "cache_read": 0.015
+        }
+      },
+      "ministral-8b-latest": {
+        "id": "ministral-8b-latest",
+        "name": "Ministral 8B (latest)",
+        "tool_call": true,
+        "reasoning": false,
+        "limit": {
+          "context": 262144
+        },
+        "cost": {
+          "input": 0.15,
+          "output": 0.15,
+          "cache_read": 0.015
+        }
+      },
+      "mistral-embed": {
+        "id": "mistral-embed",
+        "name": "Mistral Embed",
+        "tool_call": false,
+        "reasoning": false,
+        "limit": {
+          "context": 8000
+        },
+        "cost": {
+          "input": 0.1,
+          "output": 0
+        }
+      },
+      "mistral-large-2512": {
+        "id": "mistral-large-2512",
+        "name": "Mistral Large 3",
+        "tool_call": true,
+        "reasoning": false,
+        "limit": {
+          "context": 262144
+        },
+        "cost": {
+          "input": 0.5,
+          "output": 1.5,
+          "cache_read": 0.05
+        }
+      },
+      "mistral-large-4": {
+        "id": "mistral-large-4",
+        "name": "Mistral Large 4",
+        "status": "beta",
+        "tool_call": true,
+        "reasoning": true,
+        "limit": {
+          "context": 1048576
+        },
+        "cost": {
+          "input": 0.7,
+          "output": 2.1,
+          "cache_read": 0.07
+        }
+      },
+      "mistral-large-4-0-8": {
+        "id": "mistral-large-4-0-8",
+        "name": "Mistral Large 4.0.8",
+        "status": "beta",
+        "tool_call": true,
+        "reasoning": true,
+        "limit": {
+          "context": 1048576
+        },
+        "cost": {
+          "input": 0.7,
+          "output": 2.1,
+          "cache_read": 0.07
+        }
+      },
+      "mistral-large-latest": {
+        "id": "mistral-large-latest",
+        "name": "Mistral Large (latest)",
+        "tool_call": true,
+        "reasoning": false,
+        "limit": {
+          "context": 262144
+        },
+        "cost": {
+          "input": 0.5,
+          "output": 1.5,
+          "cache_read": 0.05
+        }
+      },
+      "mistral-medium-2604": {
+        "id": "mistral-medium-2604",
+        "name": "Mistral Medium 3.5",
+        "tool_call": true,
+        "reasoning": true,
+        "limit": {
+          "context": 262144
+        },
+        "cost": {
+          "input": 1.5,
+          "output": 7.5,
+          "cache_read": 0.15
+        }
+      },
+      "mistral-medium-latest": {
+        "id": "mistral-medium-latest",
+        "name": "Mistral Medium (latest)",
+        "tool_call": true,
+        "reasoning": true,
+        "limit": {
+          "context": 262144
+        },
+        "cost": {
+          "input": 1.5,
+          "output": 7.5,
+          "cache_read": 0.15
+        }
+      },
+      "mistral-small-2603": {
+        "id": "mistral-small-2603",
+        "name": "Mistral Small 4",
+        "tool_call": true,
+        "reasoning": true,
+        "limit": {
+          "context": 262144
+        },
+        "cost": {
+          "input": 0.15,
+          "output": 0.6,
+          "cache_read": 0.015
+        }
+      },
+      "mistral-small-latest": {
+        "id": "mistral-small-latest",
+        "name": "Mistral Small (latest)",
+        "tool_call": true,
+        "reasoning": true,
+        "limit": {
+          "context": 262144
+        },
+        "cost": {
+          "input": 0.15,
+          "output": 0.6,
+          "cache_read": 0.015
+        }
+      },
+      "voxtral-mini-latest": {
+        "id": "voxtral-mini-latest",
+        "name": "Voxtral Mini (latest)",
+        "tool_call": false,
+        "reasoning": false,
+        "limit": {
+          "context": 0
+        },
+        "cost": {}
+      },
+      "voxtral-mini-tts-latest": {
+        "id": "voxtral-mini-tts-latest",
+        "name": "Voxtral Mini TTS (latest)",
+        "tool_call": false,
+        "reasoning": false,
+        "limit": {
+          "context": 0
+        },
+        "cost": {}
+      },
+      "voxtral-small-2507": {
+        "id": "voxtral-small-2507",
+        "name": "Voxtral Small",
+        "tool_call": true,
+        "reasoning": false,
+        "limit": {
+          "context": 32768
+        },
+        "cost": {
+          "input": 0.1,
+          "output": 0.4
+        }
+      },
+      "voxtral-small-latest": {
+        "id": "voxtral-small-latest",
+        "name": "Voxtral Small (latest)",
+        "tool_call": true,
+        "reasoning": false,
+        "limit": {
+          "context": 32768
+        },
+        "cost": {
+          "input": 0.1,
+          "output": 0.4
+        }
+      },
+      "zai-glm-5-3": {
+        "id": "zai-glm-5-3",
+        "name": "GLM-5.3",
+        "tool_call": true,
+        "reasoning": true,
+        "limit": {
+          "context": 1048576
+        },
+        "cost": {
+          "input": 1.4,
+          "output": 4.4,
+          "cache_read": 0.14
+        }
+      },
+      "zai-glm-5-3-flash": {
+        "id": "zai-glm-5-3-flash",
+        "name": "GLM-5.3-Flash",
+        "tool_call": true,
+        "reasoning": true,
+        "limit": {
+          "context": 1048576
+        },
+        "cost": {
+          "input": 0.15,
+          "output": 0.5,
+          "cache_read": 0.03
+        }
+      }
+    }
+  },
   "openrouter": {
     "models": {
       "~anthropic/claude-fable-latest": {
@@ -850,9 +1813,9 @@
           "context": 1048576
         },
         "cost": {
-          "input": 0.022,
-          "output": 0.192,
-          "cache_read": 0.004
+          "input": 0.035,
+          "output": 0.315,
+          "cache_read": 0.006
         }
       },
       "~deepseek/deepseek-pro-latest": {
@@ -865,7 +1828,7 @@
         },
         "cost": {
           "input": 0.1035,
-          "output": 4,
+          "output": 8,
           "cache_read": 0.1
         }
       },
@@ -878,9 +1841,9 @@
           "context": 1048576
         },
         "cost": {
-          "input": 0.0429,
-          "output": 0.1518,
-          "cache_read": 0.028
+          "input": 0.059,
+          "output": 0.3,
+          "cache_read": 0.035
         }
       },
       "~google/gemini-flash-latest": {
@@ -920,9 +1883,9 @@
           "context": 1048576
         },
         "cost": {
-          "input": 0.171,
-          "output": 10.5572,
-          "cache_read": 0.17
+          "input": 0.2,
+          "output": 15,
+          "cache_read": 0.19
         }
       },
       "~openai/gpt-astra-latest": {
@@ -1032,9 +1995,9 @@
           "context": 1048576
         },
         "cost": {
-          "input": 0.0197,
-          "output": 0.1324,
-          "cache_read": 0.0197
+          "input": 0.0313,
+          "output": 0.0846,
+          "cache_read": 0.03
         }
       },
       "~z-ai/glm-latest": {
@@ -1672,9 +2635,9 @@
           "context": 1048576
         },
         "cost": {
-          "input": 0.119,
-          "output": 0.238,
-          "cache_read": 0.0238
+          "input": 0.059,
+          "output": 0.3,
+          "cache_read": 0.035
         }
       },
       "deepseek/deepseek-v4-flash-vision-exp": {
@@ -1700,9 +2663,9 @@
           "context": 1048576
         },
         "cost": {
-          "input": 0.816234,
-          "output": 1.632468,
-          "cache_read": 0.06802
+          "input": 1.6,
+          "output": 3.2,
+          "cache_read": 0.135
         }
       },
       "deepseek/deepseek-v4-pro-0813": {
@@ -1714,9 +2677,9 @@
           "context": 1048576
         },
         "cost": {
-          "input": 0.66,
-          "output": 1.98,
-          "cache_read": 0.022
+          "input": 0.115,
+          "output": 4,
+          "cache_read": 0.11
         }
       },
       "deepseek/deepseek-v4.1-flash": {
@@ -1730,7 +2693,7 @@
         "cost": {
           "input": 0.045,
           "output": 0.5,
-          "cache_read": 0.006
+          "cache_read": 0.012
         }
       },
       "deepseek/deepseek-v4.1-flash-1017": {
@@ -2099,9 +3062,9 @@
           "context": 262144
         },
         "cost": {
-          "input": 0.09,
-          "output": 0.3,
-          "cache_read": 0.05
+          "input": 0.077,
+          "output": 0.23,
+          "cache_read": 0.038
         }
       },
       "google/gemma-4-26b-a4b-it:free": {
@@ -2379,14 +3342,14 @@
       "meta-llama/llama-3.1-70b-instruct": {
         "id": "meta-llama/llama-3.1-70b-instruct",
         "name": "Llama-3.1-70B-Instruct",
-        "tool_call": true,
+        "tool_call": false,
         "reasoning": false,
         "limit": {
           "context": 131072
         },
         "cost": {
-          "input": 0.4,
-          "output": 0.4
+          "input": 0.72,
+          "output": 0.72
         }
       },
       "meta-llama/llama-3.1-8b-instruct": {
@@ -2425,8 +3388,8 @@
           "context": 131072
         },
         "cost": {
-          "input": 0.05,
-          "output": 0.33
+          "input": 0.0509,
+          "output": 0.335
         }
       },
       "meta-llama/llama-3.3-70b-instruct": {
@@ -2438,8 +3401,9 @@
           "context": 131072
         },
         "cost": {
-          "input": 0.1,
-          "output": 0.32
+          "input": 0.2,
+          "output": 0.52,
+          "cache_read": 0.1
         }
       },
       "meta-llama/llama-4-maverick": {
@@ -2683,8 +3647,8 @@
           "context": 204800
         },
         "cost": {
-          "input": 0.3,
-          "output": 1.2,
+          "input": 0.27,
+          "output": 0.95,
           "cache_read": 0.03
         }
       },
@@ -2725,9 +3689,9 @@
           "context": 1048576
         },
         "cost": {
-          "input": 0.15,
-          "output": 0.6,
-          "cache_read": 0.015
+          "input": 0.075,
+          "output": 0.3,
+          "cache_read": 0.0075
         }
       },
       "mistralai/codestral-2508": {
@@ -3122,9 +4086,9 @@
           "context": 1048576
         },
         "cost": {
-          "input": 0.192,
+          "input": 0.2,
           "output": 15,
-          "cache_read": 0.182
+          "cache_read": 0.19
         }
       },
       "moonshotai/kimi-k3.1-pro": {
@@ -4098,9 +5062,9 @@
           "context": 131072
         },
         "cost": {
-          "input": 0.018,
-          "output": 0.09,
-          "cache_read": 0.009
+          "input": 0.03,
+          "output": 0.13,
+          "cache_read": 0.03
         }
       },
       "openai/gpt-oss-safeguard-20b": {
@@ -4206,8 +5170,8 @@
           "context": 1048576
         },
         "cost": {
-          "input": 0.25,
-          "output": 1,
+          "input": 0.05,
+          "output": 0.5,
           "cache_read": 0.003
         }
       },
@@ -4419,8 +5383,9 @@
           "context": 262144
         },
         "cost": {
-          "input": 0.09,
-          "output": 0.55
+          "input": 0.14,
+          "output": 0.8,
+          "cache_read": 0.05
         }
       },
       "qwen/qwen3-235b-a22b-thinking-2507": {
@@ -4499,8 +5464,8 @@
           "context": 262144
         },
         "cost": {
-          "input": 0.07,
-          "output": 0.28
+          "input": 0.15,
+          "output": 0.6
         }
       },
       "qwen/qwen3-coder-flash": {
@@ -4540,8 +5505,9 @@
           "context": 262144
         },
         "cost": {
-          "input": 0.09,
-          "output": 1.1
+          "input": 0.1,
+          "output": 1.1,
+          "cache_read": 0.07
         }
       },
       "qwen/qwen3-vl-235b-a22b-instruct": {
@@ -4700,8 +5666,8 @@
           "context": 262144
         },
         "cost": {
-          "input": 0.32,
-          "output": 3.2
+          "input": 0.45,
+          "output": 2.7
         }
       },
       "qwen/qwen3.6-35b-a3b": {
@@ -4806,7 +5772,7 @@
         "tool_call": true,
         "reasoning": true,
         "limit": {
-          "context": 1000000
+          "context": 1024000
         },
         "cost": {
           "input": 0.15,
@@ -5159,9 +6125,9 @@
           "context": 262144
         },
         "cost": {
-          "input": 0.132,
-          "output": 0.528,
-          "cache_read": 0.033
+          "input": 0.0825,
+          "output": 0.33,
+          "cache_read": 0.020625
         }
       },
       "tencent/hy3-preview": {
@@ -5187,9 +6153,9 @@
           "context": 1048576
         },
         "cost": {
-          "input": 0.834,
-          "output": 2.501,
-          "cache_read": 0.042
+          "input": 0.7506,
+          "output": 2.2509,
+          "cache_read": 0.0378
         }
       },
       "thedrummer/cydonia-24b-v4.1": {
@@ -5587,9 +6553,9 @@
           "context": 204800
         },
         "cost": {
-          "input": 0.54,
-          "output": 1.98,
-          "cache_read": 0.099
+          "input": 0.6,
+          "output": 2.2,
+          "cache_read": 0.11
         }
       },
       "z-ai/glm-4.7-flash": {
@@ -5657,7 +6623,7 @@
         },
         "cost": {
           "input": 0.006,
-          "output": 7,
+          "output": 6.8,
           "cache_read": 0.005
         }
       },
@@ -5684,9 +6650,9 @@
           "context": 1048576
         },
         "cost": {
-          "input": 0.0197,
-          "output": 0.1324,
-          "cache_read": 0.0197
+          "input": 0.0313,
+          "output": 0.0846,
+          "cache_read": 0.03
         }
       },
       "z-ai/glm-5.3-flashx": {
@@ -5700,7 +6666,21 @@
         "cost": {
           "input": 0.37,
           "output": 1.25,
-          "cache_read": 0.09
+          "cache_read": 0.075
+        }
+      },
+      "z-ai/glm-5.3-flashx-legal": {
+        "id": "z-ai/glm-5.3-flashx-legal",
+        "name": "GLM 5.3 FlashX Legal",
+        "tool_call": true,
+        "reasoning": true,
+        "limit": {
+          "context": 1048576
+        },
+        "cost": {
+          "input": 0.37,
+          "output": 1.25,
+          "cache_read": 0.075
         }
       },
       "z-ai/glm-5.3-prime": {
@@ -5985,6 +6965,413 @@
           "input": 1.2,
           "output": 4,
           "cache_read": 0.24
+        }
+      }
+    }
+  },
+  "alibaba": {
+    "models": {
+      "deepseek-v4-flash-0731": {
+        "id": "deepseek-v4-flash-0731",
+        "name": "DeepSeek V4 Flash 0731",
+        "tool_call": true,
+        "reasoning": true,
+        "limit": {
+          "context": 1000000
+        },
+        "cost": {
+          "input": 0.44,
+          "output": 1.32,
+          "cache_read": 0.088
+        }
+      },
+      "glm-5.2": {
+        "id": "glm-5.2",
+        "name": "GLM-5.2",
+        "tool_call": true,
+        "reasoning": true,
+        "limit": {
+          "context": 1000000
+        },
+        "cost": {
+          "input": 1.4,
+          "output": 4.4,
+          "cache_read": 0.28
+        }
+      },
+      "kimi-k3": {
+        "id": "kimi-k3",
+        "name": "Kimi K3",
+        "tool_call": true,
+        "reasoning": true,
+        "limit": {
+          "context": 1048576
+        },
+        "cost": {
+          "input": 3,
+          "output": 15,
+          "cache_read": 0.3
+        }
+      },
+      "qwen-flash": {
+        "id": "qwen-flash",
+        "name": "Qwen Flash",
+        "tool_call": true,
+        "reasoning": true,
+        "limit": {
+          "context": 1000000
+        },
+        "cost": {
+          "input": 0.05,
+          "output": 0.4,
+          "cache_read": 0.01
+        }
+      },
+      "qwen-max": {
+        "id": "qwen-max",
+        "name": "Qwen Max",
+        "tool_call": true,
+        "reasoning": false,
+        "limit": {
+          "context": 32768
+        },
+        "cost": {
+          "input": 1.6,
+          "output": 6.4
+        }
+      },
+      "qwen-mt-plus": {
+        "id": "qwen-mt-plus",
+        "name": "Qwen-MT Plus",
+        "tool_call": false,
+        "reasoning": false,
+        "limit": {
+          "context": 16384
+        },
+        "cost": {
+          "input": 2.46,
+          "output": 7.37
+        }
+      },
+      "qwen-plus": {
+        "id": "qwen-plus",
+        "name": "Qwen Plus",
+        "tool_call": true,
+        "reasoning": true,
+        "limit": {
+          "context": 1000000
+        },
+        "cost": {
+          "input": 0.4,
+          "output": 1.2,
+          "cache_read": 0.08
+        }
+      },
+      "qwen-plus-character-ja": {
+        "id": "qwen-plus-character-ja",
+        "name": "Qwen Plus Character (Japanese)",
+        "tool_call": false,
+        "reasoning": false,
+        "limit": {
+          "context": 8192
+        },
+        "cost": {
+          "input": 0.5,
+          "output": 1.4
+        }
+      },
+      "qwen-vl-ocr": {
+        "id": "qwen-vl-ocr",
+        "name": "Qwen-VL OCR",
+        "tool_call": false,
+        "reasoning": false,
+        "limit": {
+          "context": 34096
+        },
+        "cost": {
+          "input": 0.07,
+          "output": 0.16
+        }
+      },
+      "qwen3-asr-flash": {
+        "id": "qwen3-asr-flash",
+        "name": "Qwen3-ASR Flash",
+        "tool_call": false,
+        "reasoning": false,
+        "limit": {
+          "context": 53248
+        },
+        "cost": {}
+      },
+      "qwen3-coder-flash": {
+        "id": "qwen3-coder-flash",
+        "name": "Qwen3 Coder Flash",
+        "tool_call": true,
+        "reasoning": false,
+        "limit": {
+          "context": 1000000
+        },
+        "cost": {
+          "input": 0.3,
+          "output": 1.5,
+          "cache_read": 0.06
+        }
+      },
+      "qwen3-omni-flash": {
+        "id": "qwen3-omni-flash",
+        "name": "Qwen3-Omni Flash",
+        "tool_call": true,
+        "reasoning": true,
+        "limit": {
+          "context": 65536
+        },
+        "cost": {
+          "input": 0.43,
+          "output": 1.66
+        }
+      },
+      "qwen3-vl-30b-a3b": {
+        "id": "qwen3-vl-30b-a3b",
+        "name": "Qwen3-VL 30B-A3B",
+        "tool_call": true,
+        "reasoning": true,
+        "limit": {
+          "context": 131072
+        },
+        "cost": {
+          "input": 0.2,
+          "output": 0.8
+        }
+      },
+      "qwen3-vl-plus": {
+        "id": "qwen3-vl-plus",
+        "name": "Qwen3-VL Plus",
+        "tool_call": true,
+        "reasoning": true,
+        "limit": {
+          "context": 262144
+        },
+        "cost": {
+          "input": 0.2,
+          "output": 1.6,
+          "cache_read": 0.04
+        }
+      },
+      "qwen3.5-122b-a10b": {
+        "id": "qwen3.5-122b-a10b",
+        "name": "Qwen3.5 122B-A10B",
+        "tool_call": true,
+        "reasoning": true,
+        "limit": {
+          "context": 262144
+        },
+        "cost": {
+          "input": 0.4,
+          "output": 3.2
+        }
+      },
+      "qwen3.5-27b": {
+        "id": "qwen3.5-27b",
+        "name": "Qwen3.5 27B",
+        "tool_call": true,
+        "reasoning": true,
+        "limit": {
+          "context": 262144
+        },
+        "cost": {
+          "input": 0.3,
+          "output": 2.4
+        }
+      },
+      "qwen3.5-35b-a3b": {
+        "id": "qwen3.5-35b-a3b",
+        "name": "Qwen3.5 35B-A3B",
+        "tool_call": true,
+        "reasoning": true,
+        "limit": {
+          "context": 262144
+        },
+        "cost": {
+          "input": 0.25,
+          "output": 2
+        }
+      },
+      "qwen3.5-397b-a17b": {
+        "id": "qwen3.5-397b-a17b",
+        "name": "Qwen3.5 397B-A17B",
+        "tool_call": true,
+        "reasoning": true,
+        "limit": {
+          "context": 262144
+        },
+        "cost": {
+          "input": 0.6,
+          "output": 3.6
+        }
+      },
+      "qwen3.5-flash": {
+        "id": "qwen3.5-flash",
+        "name": "Qwen3.5 Flash",
+        "tool_call": true,
+        "reasoning": true,
+        "limit": {
+          "context": 1000000
+        },
+        "cost": {
+          "input": 0.1,
+          "output": 0.4,
+          "cache_read": 0.01
+        }
+      },
+      "qwen3.5-plus": {
+        "id": "qwen3.5-plus",
+        "name": "Qwen3.5 Plus",
+        "tool_call": true,
+        "reasoning": true,
+        "limit": {
+          "context": 1000000
+        },
+        "cost": {
+          "input": 0.4,
+          "output": 2.4
+        }
+      },
+      "qwen3.6-27b": {
+        "id": "qwen3.6-27b",
+        "name": "Qwen3.6 27B",
+        "tool_call": true,
+        "reasoning": true,
+        "limit": {
+          "context": 262144
+        },
+        "cost": {
+          "input": 0.6,
+          "output": 3.6
+        }
+      },
+      "qwen3.6-35b-a3b": {
+        "id": "qwen3.6-35b-a3b",
+        "name": "Qwen3.6 35B-A3B",
+        "tool_call": true,
+        "reasoning": true,
+        "limit": {
+          "context": 262144
+        },
+        "cost": {
+          "input": 0.375,
+          "output": 2.25
+        }
+      },
+      "qwen3.6-flash": {
+        "id": "qwen3.6-flash",
+        "name": "Qwen3.6 Flash",
+        "tool_call": true,
+        "reasoning": true,
+        "limit": {
+          "context": 1000000
+        },
+        "cost": {
+          "input": 0.25,
+          "output": 1.5,
+          "cache_read": 0.025
+        }
+      },
+      "qwen3.6-plus": {
+        "id": "qwen3.6-plus",
+        "name": "Qwen3.6 Plus",
+        "tool_call": true,
+        "reasoning": true,
+        "limit": {
+          "context": 1000000
+        },
+        "cost": {
+          "input": 0.5,
+          "output": 3,
+          "cache_read": 0.05
+        }
+      },
+      "qwen3.7-flash": {
+        "id": "qwen3.7-flash",
+        "name": "Qwen3.7 Flash",
+        "tool_call": true,
+        "reasoning": true,
+        "limit": {
+          "context": 1000000
+        },
+        "cost": {
+          "input": 0.03,
+          "output": 0.13,
+          "cache_read": 0.006
+        }
+      },
+      "qwen3.7-max": {
+        "id": "qwen3.7-max",
+        "name": "Qwen3.7 Max",
+        "tool_call": true,
+        "reasoning": true,
+        "limit": {
+          "context": 1000000
+        },
+        "cost": {
+          "input": 2.5,
+          "output": 7.5,
+          "cache_read": 0.5
+        }
+      },
+      "qwen3.7-plus": {
+        "id": "qwen3.7-plus",
+        "name": "Qwen3.7 Plus",
+        "tool_call": true,
+        "reasoning": true,
+        "limit": {
+          "context": 1000000
+        },
+        "cost": {
+          "input": 0.4,
+          "output": 1.6,
+          "cache_read": 0.08
+        }
+      },
+      "qwen3.8-flash": {
+        "id": "qwen3.8-flash",
+        "name": "Qwen3.8 Flash",
+        "tool_call": true,
+        "reasoning": true,
+        "limit": {
+          "context": 1000000
+        },
+        "cost": {
+          "input": 0.15,
+          "output": 0.47,
+          "cache_read": 0.016
+        }
+      },
+      "qwen3.8-max": {
+        "id": "qwen3.8-max",
+        "name": "Qwen3.8 Max",
+        "tool_call": true,
+        "reasoning": true,
+        "limit": {
+          "context": 1000000
+        },
+        "cost": {
+          "input": 2,
+          "output": 6,
+          "cache_read": 0.25
+        }
+      },
+      "qwen3.8-omni-flash": {
+        "id": "qwen3.8-omni-flash",
+        "name": "Qwen3.8 Omni Flash",
+        "tool_call": true,
+        "reasoning": true,
+        "limit": {
+          "context": 1000000
+        },
+        "cost": {
+          "input": 0.15,
+          "output": 0.47,
+          "cache_read": 0.016
         }
       }
     }

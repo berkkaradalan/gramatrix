@@ -1,4 +1,4 @@
-import { generateText } from 'ai'
+import { streamText } from 'ai'
 import { secretName, type ProviderTestResult } from '@shared/rpc'
 import type { ModelInfo, ModelList, ModelRef, ProviderId, ProviderStatus } from '@shared/types'
 import type { HostContext } from '../context'
@@ -11,6 +11,9 @@ import {
   createModelResolver,
   type ModelResolver
 } from './resolve-model'
+
+/** Enough for a reply after a short thought. A request this size costs a fraction of a cent. */
+const KEY_TEST_MAX_TOKENS = 256
 
 export class ProviderService {
   private readonly modelLists: ModelLists
@@ -48,7 +51,11 @@ export class ProviderService {
     return models.find(({ id }) => id === model)
   }
 
-  /** Makes the smallest possible request to prove that the key and the model work. */
+  /**
+   * Makes a small request to prove that the key and the model work. It streams, because some
+   * reasoning models refuse requests that do not, and it leaves room for the thinking that some
+   * models always do before they answer.
+   */
   async test(
     provider: ProviderId,
     requestedModel?: string,
@@ -61,12 +68,15 @@ export class ProviderService {
       ? createModelResolver({ getSecret: async () => candidateKey })
       : this.resolveModel
     try {
-      await generateText({
+      const result = streamText({
         model: await resolveModel({ provider, model }),
         prompt: 'Reply with the word ok.',
-        maxOutputTokens: 16,
+        maxOutputTokens: KEY_TEST_MAX_TOKENS,
         maxRetries: 0
       })
+      for await (const part of result.fullStream) {
+        if (part.type === 'error') throw part.error
+      }
       return { ok: true, details: { endpoint: endpointOf(baseUrl), model } }
     } catch (error) {
       const key = candidateKey ?? (await this.context.getSecret(secretName.provider(provider)))

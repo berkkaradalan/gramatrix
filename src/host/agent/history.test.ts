@@ -65,4 +65,58 @@ describe('toModelMessages', () => {
   it('skips assistant messages with nothing to send', () => {
     expect(toModelMessages([message('assistant', [])])).toEqual([])
   })
+
+  describe('with reasoning replay', () => {
+    const SIGNATURE = { google: { thoughtSignature: 'sig' } }
+    const stored = [
+      message('user', [{ type: 'text', text: 'hi' }]),
+      message('assistant', [
+        { type: 'reasoning', text: 'Look first.', providerMetadata: { deepseek: { a: 1 } } },
+        { type: 'reasoning', text: '', providerMetadata: { xai: { encrypted: 'e' } } },
+        toolCall('call-1', { providerMetadata: SIGNATURE }),
+        { type: 'text', text: 'Done.', providerMetadata: SIGNATURE }
+      ])
+    ]
+
+    it('sends reasoning and provider data back to providers that need it', () => {
+      expect(toModelMessages(stored, { replayReasoning: true })).toEqual([
+        { role: 'user', content: 'hi' },
+        {
+          role: 'assistant',
+          content: [
+            { type: 'reasoning', text: 'Look first.', providerOptions: { deepseek: { a: 1 } } },
+            { type: 'reasoning', text: '', providerOptions: { xai: { encrypted: 'e' } } },
+            {
+              type: 'tool-call',
+              toolCallId: 'call-1',
+              toolName: 'read_file',
+              input: { path: 'a' },
+              providerOptions: SIGNATURE
+            }
+          ]
+        },
+        {
+          role: 'tool',
+          content: [
+            {
+              type: 'tool-result',
+              toolCallId: 'call-1',
+              toolName: 'read_file',
+              output: { type: 'text', value: 'result' }
+            }
+          ]
+        },
+        {
+          role: 'assistant',
+          content: [{ type: 'text', text: 'Done.', providerOptions: SIGNATURE }]
+        }
+      ])
+    })
+
+    it('sends exactly what it sent before to every other provider', () => {
+      const plain = toModelMessages(stored)
+      expect(JSON.stringify(plain)).not.toContain('reasoning')
+      expect(JSON.stringify(plain)).not.toContain('providerOptions')
+    })
+  })
 })

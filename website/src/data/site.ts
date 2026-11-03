@@ -9,9 +9,13 @@ export const DESCRIPTION =
 export const PROVIDERS = [
   { name: 'Claude', logo: 'anthropic' },
   { name: 'ChatGPT', logo: 'openai' },
+  { name: 'Gemini', logo: 'google' },
+  { name: 'Grok', logo: 'xai' },
+  { name: 'DeepSeek', logo: 'deepseek' },
+  { name: 'Mistral', logo: 'mistral' },
+  { name: 'Qwen', logo: 'alibaba' },
   { name: 'OpenRouter', logo: 'openrouter' },
   { name: 'Z.ai', logo: 'zai' },
   { name: 'MiniMax', logo: 'minimax' },
-  { name: 'Kimi', logo: 'kimi' },
-  { name: 'Alibaba', logo: 'alibaba' }
+  { name: 'Kimi', logo: 'kimi' }
 ]

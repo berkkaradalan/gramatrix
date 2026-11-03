@@ -55,7 +55,9 @@ right there.
 
 Open **Settings**, then **Providers**. The same list appears during setup.
 
-- **API keys** are pay per use. The provider bills you for every token.
+- **API keys** are pay per use. The provider bills you for every token. Gemini and Mistral have a
+  free plan, and new Qwen accounts get a free quota, so you can try those three without paying.
+  On the Gemini free tier, Google may use what you send to improve its products.
 - **Coding plans** are monthly subscriptions. Their keys only work on their own plan endpoint, so a
   plan key will not work on the API key card of the same company, and the other way around.
 

@@ -151,6 +151,8 @@ function Part({ part }: { part: MessagePart }): ReactNode {
     case 'text':
       return <Markdown text={part.text} />
     case 'reasoning':
+      // Encrypted reasoning is kept for the provider but has nothing to show.
+      if (!part.text.trim()) return null
       return (
         <details className="tool reasoning">
           <summary>

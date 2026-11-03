@@ -30,7 +30,7 @@ import { NEW_CHAT_TITLE, type ChatService } from '../services/chats'
 import type { ProjectService } from '../services/projects'
 import type { StepUsage, UsageRecorder } from '../services/usage'
 import { CommandRegistry } from './commands'
-import { toModelMessages } from './history'
+import { nineCharacterToolCallId, toModelMessages } from './history'
 import {
   agentInstructions,
   botIdentity,
@@ -395,8 +395,12 @@ export class AgentService implements AgentRunner {
       onLanguageModelCallEnd: (call) => record(source, call)
     })
 
+    const { replaysReasoning, nineCharacterToolCallIds } = providerEntry(chat.model.provider)
     const result = await agent.stream({
-      messages: toModelMessages(this.dependencies.chats.messages(chat.id)),
+      messages: toModelMessages(this.dependencies.chats.messages(chat.id), {
+        replayReasoning: replaysReasoning === true,
+        toolCallId: nineCharacterToolCallIds ? nineCharacterToolCallId : undefined
+      }),
       abortSignal: controller.signal
     })
 
@@ -415,11 +419,26 @@ export class AgentService implements AgentRunner {
   /** Returns the error if this part reports one. */
   private handleStreamPart(part: TextStreamPart<ToolSet>, recorder: RunRecorder): unknown {
     switch (part.type) {
+      case 'text-start':
+        recorder.blockStarted('text')
+        break
       case 'text-delta':
         recorder.textDelta(part.text)
         break
+      case 'text-end':
+        recorder.blockEnded('text', part.providerMetadata)
+        break
+      case 'reasoning-start':
+        recorder.blockStarted('reasoning')
+        break
       case 'reasoning-delta':
         recorder.reasoningDelta(part.text)
+        break
+      case 'reasoning-end':
+        recorder.blockEnded('reasoning', part.providerMetadata)
+        break
+      case 'tool-call':
+        recorder.toolCallMetadata(part.toolCallId, part.providerMetadata)
         break
       case 'tool-error':
         recorder.toolRejected(

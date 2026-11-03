@@ -10,8 +10,13 @@ const OUTPUT_PATH = new URL('../src/host/providers/models-snapshot.json', import
 const PROVIDERS = [
   'anthropic',
   'openai',
+  'google',
+  'xai',
+  'deepseek',
+  'mistral',
   'openrouter',
   'zai',
+  'alibaba',
   'minimax',
   'zai-coding-plan',
   'zhipuai-coding-plan',
@@ -58,5 +63,5 @@ for (const provider of PROVIDERS) {
   snapshot[provider] = { models: Object.fromEntries(kept.map((m) => [m.id, toSnapshotModel(m)])) }
 }
 
-writeFileSync(OUTPUT_PATH, `${JSON.stringify(snapshot, null, 1)}\n`)
+writeFileSync(OUTPUT_PATH, `${JSON.stringify(snapshot, null, 2)}\n`)
 console.log(`Wrote ${PROVIDERS.length} providers to ${OUTPUT_PATH.pathname}.`)

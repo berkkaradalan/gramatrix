@@ -42,19 +42,46 @@ function findApiCallError(error: unknown): APICallError | null {
   return null
 }
 
-/** Reads the shapes used by Anthropic, OpenAI and Z.ai error bodies. */
+interface ErrorBody {
+  code?: unknown
+  message?: unknown
+  /** Mistral sends a string, and a list for validation errors. */
+  detail?: unknown
+  /** An object for most providers, a plain message for xAI. */
+  error?:
+    | string
+    | {
+        code?: unknown
+        type?: unknown
+        message?: unknown
+        /** Google: INVALID_ARGUMENT, PERMISSION_DENIED and the like. */
+        status?: unknown
+        /** Google: the most specific reason, such as API_KEY_INVALID. */
+        details?: { reason?: unknown }[]
+      }
+}
+
+/**
+ * Reads the error bodies of the providers in the catalog: Anthropic, OpenAI and Z.ai style
+ * objects, Google's status and reason, xAI's flat code and message, and Mistral's detail.
+ */
 function parseBody(body: string | undefined): { code?: string; message?: string } {
   try {
-    const parsed = JSON.parse(body ?? '') as {
-      code?: unknown
-      message?: unknown
-      error?: { code?: unknown; type?: unknown; message?: unknown }
-    }
-    const code = parsed.error?.code ?? parsed.error?.type ?? parsed.code
-    const message = parsed.error?.message ?? parsed.message
+    const parsed = JSON.parse(body ?? '') as ErrorBody
+    const error = typeof parsed.error === 'object' && parsed.error !== null ? parsed.error : {}
+    const reason = Array.isArray(error.details)
+      ? error.details.find((detail) => typeof detail?.reason === 'string')?.reason
+      : undefined
+    const code = reason ?? error.status ?? error.code ?? error.type ?? parsed.code
+    const message = [
+      error.message,
+      parsed.error,
+      parsed.message,
+      typeof parsed.detail === 'string' ? parsed.detail : undefined
+    ].find((candidate): candidate is string => typeof candidate === 'string')
     return {
       code: code === undefined || code === null ? undefined : String(code),
-      message: typeof message === 'string' ? message : undefined
+      message
     }
   } catch {
     return {}
@@ -126,6 +153,94 @@ function explainGlmCode(entry: ProviderEntry, details: FailureDetails): string |
   }
 }
 
+/** Gemini can answer a bad key with 400 or 401, and says more in its reason than its status. */
+function explainGeminiCode(entry: ProviderEntry, details: FailureDetails): string | null {
+  const { code, status, model, message } = details
+  if (code === 'API_KEY_INVALID' || status === 401) {
+    return (
+      `Google did not accept this key${code ? ` (${code})` : ''}. Create a new one in Google AI ` +
+      'Studio. Google Cloud and Vertex AI credentials do not work here.'
+    )
+  }
+  if (code === 'PERMISSION_DENIED') {
+    return 'This key may not use the Gemini API. Check its API restrictions in Google AI Studio.'
+  }
+  if (code === 'RESOURCE_EXHAUSTED') {
+    // A free key gets a limit of zero on models that have no free tier.
+    return /limit: ?0\b/.test(message ?? '')
+      ? `${model} is not part of the free tier. Turn on billing in Google AI Studio, or pick another model.`
+      : `${entry.label} quota or rate limit reached. Wait a moment, or check your limits in Google AI Studio.`
+  }
+  if (code === 'FAILED_PRECONDITION') {
+    return (
+      'Gemini is not available for this account, often because of the country it is used from ' +
+      `or because billing is needed. ${message ?? ''}`.trim()
+    )
+  }
+  return null
+}
+
+/** xAI answers a bad key with 400 and a team without credits with 403. */
+function explainXaiCode(entry: ProviderEntry, details: FailureDetails): string | null {
+  const { status, model, message = '' } = details
+  if (status === 400 && /api key/i.test(message)) {
+    return `${entry.label} did not accept this key. Check it, or create a new one in the xAI Console.`
+  }
+  if (status === 403 && /credit/i.test(message)) {
+    return (
+      'Your xAI team has no credits. Buy credits in the xAI Console. A SuperGrok or X ' +
+      'subscription does not include API credits.'
+    )
+  }
+  if ((status === 403 || status === 429) && /spending limit/i.test(message)) {
+    return `Your xAI spending limit is reached. Raise it in the xAI Console. ${message}`.trim()
+  }
+  if (status === 403) {
+    return `This xAI key may not use ${model}. A team admin can limit a key to some models.`
+  }
+  return null
+}
+
+/** Alibaba Cloud names its errors, and a key from another region looks just like a bad key. */
+function explainAlibabaCode(entry: ProviderEntry, details: FailureDetails): string | null {
+  switch (details.code) {
+    case 'invalid_api_key':
+    case 'InvalidApiKey':
+      return (
+        `${entry.label} did not accept this key. Keys only work in the region they were made in, ` +
+        'and this entry uses Singapore. Create a key there, or check the one you have.'
+      )
+    case 'Arrearage':
+      return 'Your Alibaba Cloud account has no balance. Top it up and try again.'
+    case 'AllocationQuota.FreeTierOnly':
+      return (
+        `The free quota for ${details.model} is used up. Turn off "Free quota only" in Model ` +
+        'Studio to pay for more, or pick another model.'
+      )
+    case 'data_inspection_failed':
+      return 'Alibaba Cloud blocked this request in its content check. Rephrase it and try again.'
+    case 'access_denied':
+      return `This key may not use ${details.model}. Check the model access of your workspace.`
+    default:
+      return null
+  }
+}
+
+/** Provider specific explanations, for providers whose codes say more than the HTTP status. */
+function explainProviderCode(entry: ProviderEntry, details: FailureDetails): string | null {
+  if (GLM_FAMILY.includes(entry.id)) return explainGlmCode(entry, details)
+  switch (entry.id) {
+    case 'gemini':
+      return explainGeminiCode(entry, details)
+    case 'xai':
+      return explainXaiCode(entry, details)
+    case 'alibaba':
+      return explainAlibabaCode(entry, details)
+    default:
+      return null
+  }
+}
+
 function explainStatus(entry: ProviderEntry, details: FailureDetails): string {
   const { status, model, endpoint } = details
   switch (status) {
@@ -157,9 +272,7 @@ export function explainFailure(
   apiKey?: string | null
 ): string {
   const entry = providerEntry(provider)
-  const explanation =
-    (GLM_FAMILY.includes(provider) ? explainGlmCode(entry, details) : null) ??
-    explainStatus(entry, details)
+  const explanation = explainProviderCode(entry, details) ?? explainStatus(entry, details)
   // Outages and connection failures say nothing about the key, so no entry advice for those.
   const providerAnswered = details.status !== undefined && details.status < 500
   const hint = apiKey && providerAnswered ? wrongEntryHint(provider, apiKey) : null

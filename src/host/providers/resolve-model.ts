@@ -1,8 +1,12 @@
 import { createAnthropic } from '@ai-sdk/anthropic'
+import { createDeepSeek } from '@ai-sdk/deepseek'
+import { createGoogleGenerativeAI } from '@ai-sdk/google'
+import { createMistral } from '@ai-sdk/mistral'
 import { createOpenAI } from '@ai-sdk/openai'
 import { createOpenAICompatible } from '@ai-sdk/openai-compatible'
+import { createXai } from '@ai-sdk/xai'
 import { createOpenRouter } from '@openrouter/ai-sdk-provider'
-import type { LanguageModel } from 'ai'
+import { defaultSettingsMiddleware, wrapLanguageModel, type LanguageModel } from 'ai'
 import { secretName } from '@shared/rpc'
 import type { ModelRef } from '@shared/types'
 import type { HostContext } from '../context'
@@ -44,6 +48,21 @@ export function createModelResolver(
           // Streams leave out token counts unless they are asked for.
           includeUsage: true
         })(model)
+      case 'google':
+        return createGoogleGenerativeAI({ apiKey, baseURL: entry.baseUrl })(model)
+      case 'deepseek':
+        return createDeepSeek({ apiKey, baseURL: entry.baseUrl })(model)
+      case 'mistral':
+        return createMistral({ apiKey, baseURL: entry.baseUrl })(model)
+      case 'xai':
+        // Teams with zero data retention reject stored requests, and Gramatrix keeps its own
+        // history anyway, so nothing is stored at xAI.
+        return wrapLanguageModel({
+          model: createXai({ apiKey, baseURL: entry.baseUrl })(model),
+          middleware: defaultSettingsMiddleware({
+            settings: { providerOptions: { xai: { store: false } } }
+          })
+        })
     }
   }
 }

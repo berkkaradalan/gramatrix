@@ -67,7 +67,8 @@ const CHANNELS: Channel[] = [
     permissionMode: 'read-only',
     botId: null,
     state: 'connected',
-    error: null
+    error: null,
+    account: 'gramatrix_demo_bot'
   },
   {
     kind: 'slack',
@@ -77,7 +78,8 @@ const CHANNELS: Channel[] = [
     permissionMode: 'read-only',
     botId: null,
     state: 'disabled',
-    error: null
+    error: null,
+    account: null
   }
 ]
 
@@ -107,7 +109,11 @@ const seed = {
       }
     ],
     'secrets.has': true,
-    'channels.createPairingCode': { code: 'K7Q2M9' }
+    'channels.createPairingCode': {
+      code: 'K7Q2M9AB',
+      expiresAt: Date.now() + 600_000,
+      link: 'https://t.me/gramatrix_demo_bot?start=K7Q2M9AB'
+    }
   }
 }
 
@@ -205,7 +211,7 @@ test('save screenshots', async () => {
     await page.getByRole('button', { name: 'Channels' }).click()
     await shot(page, 'channels')
     await page.getByRole('button', { name: 'Manage' }).click()
-    await page.getByRole('button', { name: 'Create pairing code' }).click()
+    await page.getByRole('button', { name: 'Pair another account' }).click()
     await shot(page, 'channels-setup')
     await page.keyboard.press('Escape')
 

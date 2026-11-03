@@ -47,6 +47,16 @@ export type JobInput = Pick<
 export type BotInput = Pick<Bot, 'name' | 'soul' | 'model' | 'learns'> &
   Partial<Pick<Bot, 'projectId' | 'avatar'>>
 
+export interface PairingCode {
+  code: string
+  expiresAt: number
+  /**
+   * A link that opens the bot and sends the code with one tap, where the platform has one. On
+   * Telegram it is https://t.me/<bot>?start=<code>.
+   */
+  link: string | null
+}
+
 export interface ChannelConfigInput {
   kind: ChannelKind
   enabled: boolean
@@ -157,7 +167,7 @@ export interface RpcMethods {
 
   'channels.list': { params: void; result: Channel[] }
   'channels.configure': { params: ChannelConfigInput; result: Channel }
-  'channels.createPairingCode': { params: { kind: ChannelKind }; result: { code: string } }
+  'channels.createPairingCode': { params: { kind: ChannelKind }; result: PairingCode }
   'channels.pairings': { params: { kind: ChannelKind }; result: ChannelPairing[] }
   'channels.revokePairing': {
     params: { kind: ChannelKind; externalUserId: string }

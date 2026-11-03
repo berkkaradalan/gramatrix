@@ -12,7 +12,11 @@ export const LOCKOUT_MS = 15 * 60_000
 const CODE_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
 const CODE_LENGTH = 8
 
-const CODE_PATTERN = new RegExp(`^(?:/pair\\s+)?([${CODE_ALPHABET}]{${CODE_LENGTH}})$`, 'i')
+// "/start CODE" is what a Telegram link with ?start=CODE sends when the person taps Start.
+const CODE_PATTERN = new RegExp(
+  `^(?:/(?:pair|start)\\s+)?([${CODE_ALPHABET}]{${CODE_LENGTH}})$`,
+  'i'
+)
 
 // A group message usually carries a bot mention too, so the code can sit anywhere in the text.
 const EMBEDDED_CODE_PATTERN = new RegExp(
@@ -49,14 +53,15 @@ export class PairingCodes {
   constructor(private readonly now: () => number) {}
 
   /** Replaces any earlier code. The owner asking for one also lifts a channel wide lockout. */
-  create(kind: ChannelKind): string {
+  create(kind: ChannelKind): { code: string; expiresAt: number } {
     let code = ''
     for (let index = 0; index < CODE_LENGTH; index++) {
       code += CODE_ALPHABET[randomInt(CODE_ALPHABET.length)]
     }
-    this.codes.set(kind, { digest: digest(code), expiresAt: this.now() + PAIRING_CODE_TTL_MS })
+    const expiresAt = this.now() + PAIRING_CODE_TTL_MS
+    this.codes.set(kind, { digest: digest(code), expiresAt })
     this.channelFailures.delete(kind)
-    return code
+    return { code, expiresAt }
   }
 
   /**

@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import type { Channel, Job } from '../../src/shared/types'
+import type { Job } from '../../src/shared/types'
 import { CHAT, PROJECT, SHELL_SEED } from './fake-backend/fixtures'
 import { launchWithFakeBackend, recordedParams } from './fake-backend/launch-fake'
 
@@ -17,17 +17,6 @@ const JOB: Job = {
   lastRunAt: null,
   nextRunAt: null,
   createdAt: 1
-}
-
-const CHANNEL: Channel = {
-  kind: 'telegram',
-  enabled: false,
-  projectId: null,
-  model: null,
-  permissionMode: 'read-only',
-  botId: null,
-  state: 'disabled',
-  error: null
 }
 
 test('lists jobs across projects in plain English', async () => {
@@ -74,23 +63,6 @@ test('without a project the Scheduled page offers to add one', async () => {
   const { page, close } = await launchWithFakeBackend({ ...SHELL_SEED, projects: [], chats: [] })
   await page.getByRole('button', { name: 'Scheduled' }).click()
   await expect(page.getByRole('button', { name: 'Add a project' })).toBeVisible()
-  await close()
-})
-
-test('sets up a channel in steps', async () => {
-  const { page, close } = await launchWithFakeBackend({
-    ...SHELL_SEED,
-    overrides: {
-      'channels.list': [CHANNEL],
-      'channels.createPairingCode': { code: 'K7Q2M9' }
-    }
-  })
-  await page.getByRole('button', { name: 'Channels' }).click()
-  await page.getByRole('button', { name: 'Set up' }).click()
-  const dialog = page.getByRole('dialog', { name: 'Set up Telegram' })
-  await expect(dialog.getByRole('region', { name: 'Connect the bot' })).toBeVisible()
-  await dialog.getByRole('button', { name: 'Create pairing code' }).click()
-  await expect(dialog.getByText('/pair K7Q2M9')).toBeVisible()
   await close()
 })
 

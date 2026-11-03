@@ -176,5 +176,16 @@ export const MIGRATIONS: readonly string[] = [
   `
   ALTER TABLE bots ADD COLUMN project_id TEXT REFERENCES projects(id) ON DELETE SET NULL;
   ALTER TABLE bots ADD COLUMN avatar TEXT;
+  `,
+  // Choices made with chat commands such as /model, for one conversation of a channel. Stored as
+  // JSON so a choice of "no project" can be told apart from no choice at all. Projects and bots in
+  // it are checked when read, so deleting one simply drops the choice.
+  `
+  CREATE TABLE channel_threads (
+    kind TEXT NOT NULL,
+    external_thread_id TEXT NOT NULL,
+    choices TEXT NOT NULL,
+    PRIMARY KEY (kind, external_thread_id)
+  );
   `
 ]

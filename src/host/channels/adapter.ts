@@ -1,4 +1,11 @@
 import type { ChannelKind } from '@shared/types'
+import type { ChannelCommand } from './commands'
+
+/** A button under a reply. Pressing it arrives as a message with `command` as its text. */
+export interface Choice {
+  label: string
+  command: string
+}
 
 /** One message from a chat platform, already reduced to what the app needs. */
 export interface InboundMessage {
@@ -16,7 +23,8 @@ export interface InboundMessage {
   isDirect: boolean
   /** True when the sender is another bot. Bots are always ignored. */
   isBot: boolean
-  reply(text: string): Promise<void>
+  /** Platforms without buttons send the text alone. */
+  reply(text: string, choices?: Choice[]): Promise<void>
 }
 
 export type MessageListener = (message: InboundMessage) => void
@@ -28,8 +36,13 @@ export type MessageListener = (message: InboundMessage) => void
 export interface ChannelAdapter {
   /** Longest single reply the platform accepts. */
   readonly maxMessageLength: number
-  /** Connects and starts delivering messages. Rejects when the connection fails. */
-  start(listener: MessageListener): Promise<void>
+  /**
+   * Connects and starts delivering messages. Rejects when the connection fails. Platforms with a
+   * command menu list `commands` in it.
+   */
+  start(listener: MessageListener, commands: readonly ChannelCommand[]): Promise<void>
+  /** The bot's user name on the platform, once `start` resolved. Null when it is not known. */
+  accountName?(): string | null
   stop(): Promise<void>
 }
 

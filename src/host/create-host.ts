@@ -43,7 +43,14 @@ export function createHost(context: HostContext): Host {
   const bots = new BotService(context)
   const agent = new AgentService(context, { chats, projects, resolveModel, usage, bots })
   const jobs = new JobService(context, { chats, runner: agent })
-  const channels = new ChannelService(context, { chats, settings, runner: agent })
+  const channels = new ChannelService(context, {
+    chats,
+    settings,
+    projects,
+    bots,
+    providers,
+    runner: agent
+  })
 
   // Work must not outlive the chat or project it belongs to.
   chats.onRemove((chatId) => agent.cancel(chatId))

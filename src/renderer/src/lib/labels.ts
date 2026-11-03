@@ -1,11 +1,6 @@
 import type { ChannelKind, ChannelState, PermissionMode } from '@shared/types'
 
-export const PERMISSION_LABELS: Record<PermissionMode, string> = {
-  'read-only': 'Read only',
-  ask: 'Ask first',
-  'accept-edits': 'Accept edits',
-  'full-access': 'Full access'
-}
+export { PERMISSION_LABELS } from '@shared/types'
 
 export const PERMISSION_HINTS: Record<PermissionMode, string> = {
   'read-only': 'Reads files. Cannot change anything.',

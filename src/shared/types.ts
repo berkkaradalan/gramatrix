@@ -81,6 +81,13 @@ export interface Project {
 export const PERMISSION_MODES = ['read-only', 'ask', 'accept-edits', 'full-access'] as const
 export type PermissionMode = (typeof PERMISSION_MODES)[number]
 
+export const PERMISSION_LABELS: Record<PermissionMode, string> = {
+  'read-only': 'Read only',
+  ask: 'Ask first',
+  'accept-edits': 'Accept edits',
+  'full-access': 'Full access'
+}
+
 export interface Chat {
   id: string
   /** Null for a general chat, which has no folder and therefore no file or command tools. */
@@ -222,6 +229,8 @@ export interface Channel {
   botId: string | null
   state: ChannelState
   error: string | null
+  /** The bot's own user name on the platform, known once it is connected. */
+  account: string | null
 }
 
 export interface ChannelPairing {

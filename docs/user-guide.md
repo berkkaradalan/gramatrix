@@ -190,12 +190,18 @@ the permission mode that matches what the job must do.
 Channels let you talk to the agent from Telegram or Slack while Gramatrix is running. Choose **Set
 up** on a card and follow the steps.
 
-1. **Connect the bot.** For Telegram, create a bot with @BotFather and paste its token. For Slack,
-   enable Socket Mode, then paste the bot token (`xoxb-`) and the app token (`xapp-`).
-2. **Choose how it works.** Pick a model, and a project if the agent should work in a folder.
-3. **Turn it on.**
-4. **Pair yourself.** Choose **Create pairing code** and send `/pair CODE` to the bot within 10
-   minutes.
+1. **Connect your bot.** For Telegram, create a bot with @BotFather and paste its token. For Slack,
+   enable Socket Mode, then paste the bot token (`xoxb-`) and the app token (`xapp-`). Saving the
+   tokens turns the channel on.
+2. **Pair your account.** Choose **Pair my account**. On Telegram, scan the QR code or choose **Open
+   in Telegram** and press **Start**. On Slack, send the code to the bot. The dialog shows your name
+   as soon as you are paired. A code lasts 10 minutes.
+3. **Choose how it answers.** Pick a bot or plain Gramatrix, a model, and a project if the agent
+   should work in a folder.
+
+On Telegram, send `/help` to the bot to see its commands. `/model`, `/project`, `/bot` and `/mode`
+change the settings for one chat, `/stop` stops a running answer and `/new` starts a new chat. See
+[Chat channels](channels.md#commands).
 
 Only paired people can use a channel. Anyone paired can reach your project, so pair only people you
 trust. Approvals cannot be answered from a channel, so they are denied.

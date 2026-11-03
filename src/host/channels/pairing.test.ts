@@ -34,48 +34,48 @@ describe('parsePairingCode', () => {
 describe('PairingCodes', () => {
   it('creates a different eight character code each time', () => {
     const { codes } = setup()
-    const first = codes.create('telegram')
+    const first = codes.create('telegram').code
     expect(first).toMatch(/^[A-HJ-NP-Z2-9]{8}$/)
-    expect(codes.create('telegram')).not.toBe(first)
+    expect(codes.create('telegram').code).not.toBe(first)
   })
 
   it('accepts a code once', () => {
     const { codes } = setup()
-    const code = codes.create('telegram')
+    const code = codes.create('telegram').code
     expect(codes.redeem('telegram', 'alice', code)).toBe('paired')
     expect(codes.redeem('telegram', 'bob', code)).toBe('invalid')
   })
 
   it('rejects an expired code', () => {
     const { codes, advance } = setup()
-    const code = codes.create('telegram')
+    const code = codes.create('telegram').code
     advance(PAIRING_CODE_TTL_MS)
     expect(codes.redeem('telegram', 'alice', code)).toBe('invalid')
   })
 
   it('invalidates the previous code when a new one is created', () => {
     const { codes } = setup()
-    const first = codes.create('telegram')
+    const first = codes.create('telegram').code
     codes.create('telegram')
     expect(codes.redeem('telegram', 'alice', first)).toBe('invalid')
   })
 
   it('does not accept a code for another channel', () => {
     const { codes } = setup()
-    const code = codes.create('telegram')
+    const code = codes.create('telegram').code
     expect(codes.redeem('slack', 'alice', code)).toBe('invalid')
   })
 
   it('burns a code found inside exposed text', () => {
     const { codes } = setup()
-    const code = codes.create('telegram')
+    const code = codes.create('telegram').code
     expect(codes.burnIfExposed('telegram', `@bot please use ${code.toLowerCase()}.`)).toBe(true)
     expect(codes.redeem('telegram', 'alice', code)).toBe('invalid')
   })
 
   it('leaves the code alone when exposed text does not contain it', () => {
     const { codes } = setup()
-    const code = codes.create('telegram')
+    const code = codes.create('telegram').code
     expect(codes.burnIfExposed('telegram', 'building a thing')).toBe(false)
     expect(codes.redeem('telegram', 'alice', code)).toBe('paired')
   })
@@ -91,7 +91,7 @@ describe('PairingCodes', () => {
 
   it('locks a sender after repeated wrong codes, even for the right code', () => {
     const { codes } = setup()
-    const code = codes.create('telegram')
+    const code = codes.create('telegram').code
     for (let attempt = 1; attempt < MAX_FAILED_ATTEMPTS_PER_USER; attempt++) {
       expect(codes.redeem('telegram', 'mallory', WRONG_CODE)).toBe('invalid')
     }
@@ -115,7 +115,7 @@ describe('PairingCodes', () => {
       codes.redeem('telegram', `sender-${attempt}`, WRONG_CODE)
     }
     expect(codes.isLocked('telegram', 'alice')).toBe(true)
-    const code = codes.create('telegram')
+    const code = codes.create('telegram').code
     expect(codes.redeem('telegram', 'alice', code)).toBe('paired')
   })
 })

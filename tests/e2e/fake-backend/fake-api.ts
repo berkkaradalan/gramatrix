@@ -37,6 +37,8 @@ export interface FakeBackend {
   emit<E extends keyof HostEvents>(event: E, payload: HostEvents[E]): void
   calls: { method: string; params: unknown }[]
   chats: Chat[]
+  /** Fixed answers by method. A test can change one, then emit an event, to act like the host. */
+  results: Record<string, unknown>
 }
 
 /** The page globals this harness touches. Tests compile without DOM types. */
@@ -66,6 +68,7 @@ export function installFakeBackend({
   const bots = (seed.bots ?? []).map((bot) => ({ ...bot }))
   const memories = (seed.memories ?? []).map((memory) => ({ ...memory }))
   const secrets = new Set<string>()
+  const storedSecrets = new Set<string>()
   let nextId = 1
 
   const emit = (event: string, payload: unknown): void => {
@@ -136,15 +139,22 @@ export function installFakeBackend({
         : { ok: true },
     'secrets.set': ({ name, value }: { name: string; value: string }) => {
       const provider = providerOf(name)
-      if (!provider) return
+      if (!provider) {
+        storedSecrets.add(name)
+        return
+      }
       provider.configured = true
       if (value.startsWith('bad')) secrets.add(`bad:${provider.id}`)
       else secrets.delete(`bad:${provider.id}`)
     },
     'secrets.delete': ({ name }: { name: string }) => {
+      storedSecrets.delete(name)
       const provider = providerOf(name)
       if (provider) provider.configured = false
     },
+    // Other secrets, such as channel tokens, are remembered by name. A seeded answer covers them all.
+    'secrets.has': ({ name }: { name: string }) =>
+      storedSecrets.has(name) || results['secrets.has'] === true,
     'projects.list': () => [...projects],
     'projects.add': ({ path }: { path: string }) => {
       const project: Project = {
@@ -284,7 +294,7 @@ export function installFakeBackend({
       return () => set.delete(listener as (payload: unknown) => void)
     }
   }
-  page.fakeBackend = { emit: emit as FakeBackend['emit'], calls, chats }
+  page.fakeBackend = { emit: emit as FakeBackend['emit'], calls, chats, results }
 }
 
 export const FAKE_DEFAULTS = DEFAULT_SETTINGS

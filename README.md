@@ -12,6 +12,12 @@
   <a href="https://github.com/berkkaradalan/gramatrix/actions/workflows/ci.yml"><img src="https://github.com/berkkaradalan/gramatrix/actions/workflows/ci.yml/badge.svg" alt="CI" align="center"></a>
 </p>
 
+<p align="center">
+  <a href="https://www.gramatrix.com/#features">
+    <img src="website/public/video/gramatrix-promo-readme.webp" width="800" alt="Watch the 30 second tour of Gramatrix">
+  </a>
+</p>
+
 Open a project and work with an agent that reads code, edits files and runs commands, with you in
 control of what it may do. Gramatrix runs on macOS and Linux.
 

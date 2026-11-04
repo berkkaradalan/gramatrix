@@ -14,6 +14,13 @@ import {
 
 const features = [
   {
+    tab: 'Video',
+    title: 'Gramatrix in 30 seconds',
+    text: 'Approvals, bots, schedules, channels and your own keys in one short tour. The next screens show each of them up close.',
+    video: 'gramatrix-promo',
+    alt: 'A 30 second tour of Gramatrix: approvals, bots, schedules, channels and providers'
+  },
+  {
     tab: 'Approvals',
     title: 'Review every change before it happens',
     text: 'Edits show a diff and commands wait for your answer. Each chat has its own mode: read only, ask first, accept edits or full access. Subagents follow the same rules.',
@@ -124,7 +131,7 @@ const socialImage = new URL('/og.png', Astro.site).href
       <section class="tour" id="features" aria-label="Features" data-tour>
         <div class="tour-stage">
           {
-            features.map(({ title, text, image, alt }, index) => (
+            features.map(({ title, text, image, video, alt }, index) => (
               <article
                 class="tour-panel"
                 role="tabpanel"
@@ -132,13 +139,41 @@ const socialImage = new URL('/og.png', Astro.site).href
                 aria-labelledby={`tour-tab-${index}`}
                 data-active={index === 0 ? 'true' : 'false'}
               >
-                <img
-                  src={`/screens/${image}.webp`}
-                  width="1280"
-                  height="800"
-                  alt={alt}
-                  loading={index === 0 ? 'eager' : 'lazy'}
-                />
+                {video ? (
+                  <div class="tour-video" data-tour-video>
+                    <video
+                      src={`/video/${video}.mp4`}
+                      poster={`/video/${video}-poster.webp`}
+                      width="1280"
+                      height="800"
+                      muted
+                      playsinline
+                      preload="metadata"
+                      aria-label={alt}
+                    />
+                    <button
+                      class="tour-video-toggle"
+                      type="button"
+                      aria-label="Play video"
+                      data-tour-video-toggle
+                    >
+                      <span class="tour-video-play">
+                        <Icon name="play" />
+                      </span>
+                      <span class="tour-video-pause">
+                        <Icon name="pause" />
+                      </span>
+                    </button>
+                  </div>
+                ) : (
+                  <img
+                    src={`/screens/${image}.webp`}
+                    width="1280"
+                    height="800"
+                    alt={alt}
+                    loading={index === 0 ? 'eager' : 'lazy'}
+                  />
+                )}
                 <div class="tour-copy">
                   <h2>{title}</h2>
                   <p>{text}</p>
@@ -149,7 +184,7 @@ const socialImage = new URL('/og.png', Astro.site).href
         </div>
         <div class="tour-tabs" role="tablist" aria-label="Features">
           {
-            features.map(({ tab }, index) => (
+            features.map(({ tab, video }, index) => (
               <button
                 class="tour-tab"
                 type="button"
@@ -159,6 +194,7 @@ const socialImage = new URL('/og.png', Astro.site).href
                 aria-controls={`tour-panel-${index}`}
                 aria-selected={index === 0 ? 'true' : 'false'}
                 tabindex={index === 0 ? 0 : -1}
+                data-video={video ? '' : undefined}
               />
             ))
           }

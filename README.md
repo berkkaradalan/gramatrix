@@ -14,7 +14,7 @@
 
 <p align="center">
   <a href="https://www.gramatrix.com/#features">
-    <img src="website/public/video/gramatrix-promo-readme.webp" width="800" alt="Watch the 30 second tour of Gramatrix">
+    <img src=".github/media/gramatrix-promo.gif" width="800" alt="A 30 second tour of Gramatrix: approvals, bots, schedules, channels and providers">
   </a>
 </p>
 

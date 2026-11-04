@@ -12,6 +12,7 @@ const BINARY_EXTENSIONS = new Set([
   '.icns',
   '.jpg',
   '.jpeg',
+  '.gif',
   '.mp4',
   '.webm',
   '.woff2'
